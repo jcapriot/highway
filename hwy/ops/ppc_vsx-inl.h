@@ -6391,7 +6391,7 @@ HWY_INLINE V I128Subtract(V a, V b) {
                    reinterpret_cast<__vector unsigned char>(b.raw)))};
 #endif  // HWY_COMPILER_CLANG
 #elif defined(__SIZEOF_INT128__)
-  using VU128 = __vector unsigned __int128;
+  __extension__ using VU128 = __vector unsigned __int128;
   const V diff_i128{reinterpret_cast<typename detail::Raw128<TFromV<V>>::type>(
       vec_sub(reinterpret_cast<VU128>(a.raw), reinterpret_cast<VU128>(b.raw)))};
 #else
@@ -7156,7 +7156,7 @@ HWY_API V BitShuffle(V v, VI idx) {
   const VFromD<decltype(d_full_u64)> bit_shuf_result{reinterpret_cast<RawVU64>(
       vec_bperm_u128(BitCast(du8, v).raw, bit_idx.raw))};
 #elif defined(__SIZEOF_INT128__)
-  using RawVU128 = __vector unsigned __int128;
+  __extension__ using RawVU128 = __vector unsigned __int128;
   const VFromD<decltype(d_full_u64)> bit_shuf_result{reinterpret_cast<RawVU64>(
       vec_vbpermq(reinterpret_cast<RawVU128>(v.raw), bit_idx.raw))};
 #else
@@ -7185,7 +7185,7 @@ HWY_INLINE V Lt128Vec(D d, V a, V b) {
 #if HWY_PPC_HAVE_10 && defined(__SIZEOF_INT128__)
   (void)d;
   using VU64 = __vector unsigned long long;
-  using VU128 = __vector unsigned __int128;
+  __extension__ using VU128 = __vector unsigned __int128;
 #if HWY_IS_LITTLE_ENDIAN
   const VU128 a_u128 = reinterpret_cast<VU128>(a.raw);
   const VU128 b_u128 = reinterpret_cast<VU128>(b.raw);
@@ -7228,7 +7228,7 @@ HWY_INLINE V Eq128Vec(D d, V a, V b) {
 #if HWY_PPC_HAVE_10 && defined(__SIZEOF_INT128__)
   (void)d;
   using VU64 = __vector unsigned long long;
-  using VU128 = __vector unsigned __int128;
+  __extension__ using VU128 = __vector unsigned __int128;
   return V{reinterpret_cast<VU64>(vec_cmpeq(reinterpret_cast<VU128>(a.raw),
                                             reinterpret_cast<VU128>(b.raw)))};
 #else
@@ -7244,7 +7244,7 @@ HWY_INLINE V Ne128Vec(D d, V a, V b) {
 #if HWY_PPC_HAVE_10 && defined(__SIZEOF_INT128__)
   (void)d;
   using VU64 = __vector unsigned long long;
-  using VU128 = __vector unsigned __int128;
+  __extension__ using VU128 = __vector unsigned __int128;
   return V{reinterpret_cast<VU64>(vec_cmpne(reinterpret_cast<VU128>(a.raw),
                                             reinterpret_cast<VU128>(b.raw)))};
 #else
