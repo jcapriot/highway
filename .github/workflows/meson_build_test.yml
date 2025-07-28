@@ -201,15 +201,15 @@ jobs:
       - name: Create cross file
         run: |
           echo "[binaries]" > x86_cross_file.txt
-          echo "c = ${{matrix.c_compiler}}" > x86_cross_file.txt
-          echo "cpp = ${{matrix.cxx_compiler}}" > x86_cross_file.txt
-          echo "pkgconfig = 'pkg-config'" > x86_cross_file.txt
-          echo "" > x86_cross_file.txt
-          echo "[host_machine]" > x86_cross_file.txt
-          echo "system = 'linux'" > x86_cross_file.txt
-          echo "cpu_family = 'x86'" > x86_cross_file.txt
-          echo "cpu = 'i686'" > x86_cross_file.txt
-          echo "endian = 'little'" > x86_cross_file.txt
+          echo "c = ${{matrix.c_compiler}}" >> x86_cross_file.txt
+          echo "cpp = ${{matrix.cxx_compiler}}" >> x86_cross_file.txt
+          echo "pkgconfig = 'pkg-config'" >> x86_cross_file.txt
+          echo "" >> x86_cross_file.txt
+          echo "[host_machine]" >> x86_cross_file.txt
+          echo "system = 'linux'" >> x86_cross_file.txt
+          echo "cpu_family = 'x86'" >> x86_cross_file.txt
+          echo "cpu = 'i686'" >> x86_cross_file.txt
+          echo "endian = 'little'" >> x86_cross_file.txt
 
       - name: Configure Build
         run: meson setup out --cross-file x86_cross_file.txt -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} -Dsse2=true
