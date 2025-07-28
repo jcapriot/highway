@@ -9,6 +9,6 @@ docs/html/*
 docs/md/*
 docs/rst/*
 
-subprojects/googletest-1.17.0/
 
+subprojects/googletest*
 subprojects/packagecache/

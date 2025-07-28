@@ -199,7 +199,7 @@ if cpp.get_argument_syntax() == 'msvc'
         '-D_HAS_EXCEPTIONS=0',
         language:'cpp'
     )
-    if get_option('warning_level') >= 3
+    if get_option('warning_level') == '4'
         add_project_arguments(
             # Disable some W4 warnings.  Enable them individually after they are cleaned up.
             '/wd4100',
@@ -448,6 +448,7 @@ if get_option('enable_contrib') or get_option('enable_examples')
     endif
 endif
 
+thread_dep = dependency('', required:false) # empty thread dependency
 if get_option('enable_contrib')
     # these dependencies look to be only required if enable_contrib
     contrib_deps = [hwy_dep, atomic_dep]
@@ -563,18 +564,76 @@ if get_option('enable_tests')
     if get_option('test_standalone')
         gtest_main_dep = dependency('', required:false) # empty dependency
     else
-        # defaults to system gtest with fallback to a local gtest subproject
+        # defaults to system gtest with a custom fallback to a local gtest subproject
         gtest_main_dep = dependency(
             'gtest',
             main:true,
             required:false,
-            fallback:['gtest', 'gtest_main_dep'],
         )
         if not gtest_main_dep.found()
-            gtest_proj = subproject('gtest', options:[
-                'cpp_eh=default',
+            # Use the subproject wrap file (specifically the 1.12.1 version of it that matches the cmake file)
+            # note that 1.12.1 was the last to support C++11.
+            gtest_proj = subproject('gtest', default_options:[
+                'cpp_eh=default', # do not disable cpp exceptions for gtest
             ])
-            gtest_main_dep = gtest_proj.get_variable('gtest_main_dep')
+
+            # gtest_main_dep = gtest_proj.get_variable('gtest_main_dep')  # this command can be used for the wrap file from 1.17.0
+            # otherwise the logic below should be used, but we need 1.12.1 because highway supports and tests again c++11 standard.
+
+            # this bit is awkward because the 1.12.1 wrap defines the dependency objects as files
+            # causing them to get recompiled with every test executable. The most recent gtest wrap builds
+            # gtest as a library, it's logic is mostly duplicated below.
+
+            #if this was still the empty dependency from before the contrib
+            if not thread_dep.found()
+                thread_dep = dependency('threads')
+            endif
+
+            if host_machine.system() == 'windows'
+                gtest_dllexp = '-DGTEST_CREATE_SHARED_LIBRARY=1'
+                gtest_dllimp = '-DGTEST_LINKED_AS_SHARED_LIBRARY=1'
+            else
+                gtest_dllexp = []
+                gtest_dllimp = []
+            endif
+
+            gtest_incdir = gtest_proj.get_variable('gtest_incdir')
+            gtest_libsources = gtest_proj.get_variable('gtest_libsources')
+            gtest_mainsources = gtest_proj.get_variable('gtest_mainsources')
+
+            # always build as a shared library (to avoid crt conflicts)
+            # (note that these are not installable from this project)
+            gtest_lib = shared_library(
+                'gtest-all',
+                gtest_libsources,
+                gnu_symbol_visibility: 'hidden',
+                override_options:['cpp_eh=default'],
+                cpp_args: gtest_dllexp,
+                dependencies: thread_dep,
+                include_directories: gtest_incdir,
+            )
+
+            gtest_main_lib = shared_library(
+                'gtest_main',
+                gtest_mainsources,
+                gnu_symbol_visibility: 'hidden',
+                override_options:['cpp_eh=default'],
+                cpp_args: gtest_dllexp,
+                include_directories: gtest_incdir,
+                link_with: gtest_lib,
+            )
+
+            gtest_dep = declare_dependency(
+                compile_args: gtest_dllimp,
+                include_directories: gtest_incdir,
+                link_with: gtest_lib,
+                dependencies: thread_dep,
+            )
+
+            gtest_main_dep = declare_dependency(
+                link_with: gtest_main_lib,
+                dependencies: gtest_dep,
+            )
         endif
     endif
 
