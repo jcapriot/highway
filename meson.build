@@ -571,7 +571,9 @@ if get_option('enable_tests')
             fallback:['gtest', 'gtest_main_dep'],
         )
         if not gtest_main_dep.found()
-            gtest_proj = subproject('gtest', options:['cpp_std=gnu++17,c++17'])
+            gtest_proj = subproject('gtest', options:[
+                'cpp_eh=default',
+            ])
             gtest_main_dep = gtest_proj.get_variable('gtest_main_dep')
         endif
     endif
