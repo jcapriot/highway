@@ -1,5 +1,5 @@
 # https://github.com/marketplace/actions/run-on-architecture
-name: Foreign architectures
+name: Meson Foreign architectures
 
 on: [push, pull_request]
 concurrency:
@@ -19,7 +19,6 @@ jobs:
           - arch: armv7
             distro: ubuntu_latest
             cxx_flags: -Wno-psabi
-            cmake_flags: -DHWY_CMAKE_ARM7:BOOL=ON
           - arch: ppc64le
             distro: ubuntu_latest
     steps:
@@ -35,18 +34,19 @@ jobs:
         githubToken: ${{ github.token }}
         install: |
           apt-get update -q -y
-          apt-get install -q -y --no-install-recommends \
+          c -q -y --no-install-recommends \
                 build-essential \
                 cmake \
                 libgtest-dev \
                 ninja-build \
+                meson \
                 ;
         run: |
-          export CMAKE_BUILD_PARALLEL_LEVEL=2
-          export CTEST_PARALLEL_LEVEL=2
-          CXXFLAGS=${{ matrix.cxx_flags }} cmake -GNinja ${{ matrix.cmake_flags }} -DHWY_SYSTEM_GTEST=ON -DHWY_WARNINGS_ARE_ERRORS=ON -B out .
-          cmake --build out -v
-          ctest --test-dir out
+          CXXFLAGS=${{ matrix.cxx_flags }} meson setup out -Dwerror=true -Darm7=true
+          meson compile -C out -j 2 -v
+          export MESON_NUM_PRECESSES=2
+          meson test -C out
+
   aarch64_cmake:
     name: Build and test ${{ matrix.name }} on AArch64
     runs-on: ubuntu-24.04-arm
@@ -75,15 +75,22 @@ jobs:
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
       - name: Install deps
-        run: sudo apt-get install ${{ matrix.extra_deps }}
+        run: sudo apt-get install ninja-build meson ${{ matrix.extra_deps }}
 
-      - name: Build and test
-        run: |
-          export CMAKE_BUILD_PARALLEL_LEVEL=2
-          export CTEST_PARALLEL_LEVEL=2
-          CXXFLAGS="${{ matrix.cxx_flags }}" CC=${{ matrix.c_compiler }} CXX=${{ matrix.cxx_compiler }} cmake -DHWY_WARNINGS_ARE_ERRORS=ON -DCMAKE_CXX_STANDARD=${{ matrix.cxx_standard }} ${{ matrix.extra_cmake_flags }} -B out .
-          cmake --build out -v
-          ctest --test-dir out
+      - name: Configure Build
+        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }}
+        env:
+          CXX: ${{matrix.cxx_compiler}}
+          CC: ${{matrix.c_compiler}}
+          CXXFLAGS: ${{ matrix.cxx_flags }}
+      
+      - name: Build
+        run: meson compile -C out -j 2 -v
+
+      - name: Test
+        run: meson test -C out
+        env:
+          MESON_NUM_PROCESSES: 2
 
   loongarch64_cmake:
     name: Build and test ${{ matrix.name }} on LoongArch64
@@ -110,16 +117,39 @@ jobs:
 
       - name: Install deps
         run: |
+          sudo apt-get install ninja-build meson
           wget https://github.com/loongson/build-tools/releases/download/2025.02.21/${{ matrix.extra_deps }}
           chmod +x ${{ matrix.extra_deps }}
           sudo mv ${{ matrix.extra_deps }} /opt/cross-tools/bin
-      - name: Build and test
+
+      - name: Set environment variables
         run: |
-          export CMAKE_BUILD_PARALLEL_LEVEL=2
-          export CTEST_PARALLEL_LEVEL=2
-          export PATH="/opt/cross-tools/bin:$PATH"
-          export LD_LIBRARY_PATH="/opt/cross-tools/loongarch64-unknown-linux-gnu/lib:$LD_LIBRARY_PATH"
-          export CC=${{ matrix.c_compiler }} CXX=${{ matrix.cxx_compiler }}
-          cmake -DCMAKE_C_COMPILER_TARGET="loongarch64-unknown-linux-gnu" -DCMAKE_CXX_COMPILER_TARGET="loongarch64-unknown-linux-gnu" -DCMAKE_CROSSCOMPILING=true -DCMAKE_CROSSCOMPILING_EMULATOR="qemu-loongarch64;-cpu;max;-L;/opt/cross-tools/target" -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=loongarch64 -B out .
-          cmake --build out -v
-          ctest --test-dir out
+          echo 'PATH="/opt/cross-tools/bin:$PATH"' >> $GITHUB_ENV
+          echo 'LD_LIBRARY_PATH="/opt/cross-tools/loongarch64-unknown-linux-gnu/lib:$LD_LIBRARY_PATH"' >> $GITHUB_ENV
+
+      - name: Create cross file
+        run: |
+          echo "[binaries]" > la64_cross_file.txt
+          echo "c = ${{matrix.c_compiler}}" >> la64_cross_file.txt
+          echo "cpp = ${{matrix.cxx_compiler}}" >> la64_cross_file.txt
+          echo "ar = 'loongarch64-unknown-linux-gnu-ar'" >> la64_cross_file.txt
+          echo "strip = 'loongarch64-unknown-linux-gnu-strip'" >> la64_cross_file.txt
+          echo "pkgconfig = 'pkg-config'" >> la64_cross_file.txt
+          echo "exe_wrapper = ['qemu-loongarch64','-cpu max', '-L /opt/cross-tools/target']" >> la64_cross_file.txt
+          echo "" >> la64_cross_file.txt
+          echo "[host_machine]" >> la64_cross_file.txt
+          echo "system = 'linux'" >> la64_cross_file.txt
+          echo "cpu_family = 'loongarch64'" >> la64_cross_file.txt
+          echo "cpu = 'loongarch64'" >> la64_cross_file.txt
+          echo "endian = 'little'" >> la64_cross_file.txt
+
+      - name: Configure Build
+        run: meson setup out --cross-file la64_cross_file.txt -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }}
+
+      - name: Build
+        run: meson compile -C out -j 2 -v
+
+      - name: Test
+        run: meson test -C out
+        env:
+          MESON_NUM_PROCESSES: 2
