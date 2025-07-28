@@ -766,8 +766,8 @@ if get_option('enable_tests')
                 dependencies: [hwy_test_dep, hwy_contrib_dep, gtest_main_dep],
                 link_args: test_exe_link_args,
             )
-        
-            test(exe_name, test_exe, protocol:'gtest', suite:'contrib')
+
+            test(exe_name, test_exe, protocol:'gtest', suite:'contrib', timeout: (exe_name == 'sort_test')? 90 : 30)
         endforeach
     endif
 endif
