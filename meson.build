@@ -193,24 +193,25 @@ if cpp.get_argument_syntax() == 'msvc'
     add_project_arguments(
         '/bigobj',
 
-        # Warnings
-        # '/W4', # handled by warning_level=3 default option
-
-        # Disable some W4 warnings.  Enable them individually after they are cleaned up.
-        '/wd4100',
-        '/wd4127',
-        '/wd4324',
-        '/wd4456',
-        '/wd4701',
-        '/wd4702',
-        '/wd4723',
-
         # '/GR-',  # handled by cpp_rtti=false default option
         # '/EHs-c-',  # handled by cpp_eh=none default option
         # Disable exceptions in STL code.
         '-D_HAS_EXCEPTIONS=0',
         language:'cpp'
     )
+    if get_option('warning_level') >= 3
+        add_project_arguments(
+            # Disable some W4 warnings.  Enable them individually after they are cleaned up.
+            '/wd4100',
+            '/wd4127',
+            '/wd4324',
+            '/wd4456',
+            '/wd4701',
+            '/wd4702',
+            '/wd4723',
+            language: 'cpp',
+        )
+    endif
 
     if cpp.get_id() == 'clang-cl'
         add_project_arguments(
@@ -566,8 +567,13 @@ if get_option('enable_tests')
         gtest_main_dep = dependency(
             'gtest',
             main:true,
+            required:false,
             fallback:['gtest', 'gtest_main_dep'],
         )
+        if not gtest_main_dep.found()
+            gtest_proj = subproject('gtest', options:['cpp_std=gnu++17,c++17'])
+            gtest_main_dep = gtest_proj.get_variable('gtest_main_dep')
+        endif
     endif
 
     hwy_test_files = files(
