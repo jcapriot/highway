@@ -25,7 +25,7 @@ have_riscv = cpp.has_define('__riscv')
 
 support_lsx_flag = false
 support_lasx_flag = false
-if 'loongarch' in target_machine.cpu_family()
+if 'loongarch' in host_machine.cpu_family()
     if get_option('lsx') and cpp.has_define('__loongarch_sx', args: '-mlsx')
         add_project_arguments('-mlsx', language:'cpp')
     endif
@@ -34,7 +34,7 @@ if 'loongarch' in target_machine.cpu_family()
     endif
 endif
 
-is_windows = target_machine.system() == 'windows'
+is_windows = host_machine.system() == 'windows'
 has_win_synchronization_lib = false
 if is_windows
     has_win_synchronization_lib = cpp.compiles(
@@ -63,7 +63,7 @@ if not has_win_synchronization_lib and is_windows
 endif
 
 riscv_xlen = 0
-if have_riscv or 'riscv' in target_machine.cpu_family()
+if have_riscv or 'riscv' in host_machine.cpu_family()
     riscv_xlen = cpp.get_define('__riscv_xlen')
     if riscv_xlen == ''
         message('Unable to determine RISC-V XLEN')
@@ -284,7 +284,7 @@ else
             )
         endif
     endif
-    if target_machine.system() == 'windows'
+    if host_machine.system() == 'windows'
         if cpp.get_id() == 'clang'
             add_project_arguments(
                 '-Wno-global-constructors',
@@ -388,7 +388,7 @@ hwy_include_dir = include_directories('.')
 
 hwy_version_file = files('hwy/hwy.version')
 
-if target_machine.system() in ['linux', 'freebsd', 'netbsd', 'openbsd', 'dragonfly', 'sunos']
+if host_machine.system() in ['linux', 'freebsd', 'netbsd', 'openbsd', 'dragonfly', 'sunos']
     cpp_link_args += '-Wl,--version-script=' + hwy_version_file[0].full_path()
 endif
 
@@ -459,7 +459,7 @@ if get_option('enable_contrib')
     if disable_futex
         contrib_args += '-DHWY_DISABLE_FUTEX'
     else
-        if target_machine.system() == 'windows' and cpp.get_argument_syntax() != 'msvc'
+        if host_machine.system() == 'windows' and cpp.get_argument_syntax() != 'msvc'
             contrib_deps += cpp.find_library('synchronization', required: true)
         endif
     endif
