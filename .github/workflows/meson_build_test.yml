@@ -149,7 +149,7 @@ jobs:
           CXXFLAGS: ${{ matrix.cxx_flags }}
       
       - name: Build
-        run: meson compile -C out -j 2
+        run: meson compile -C out -j 2 -v
 
       - name: Test
         run: meson test -C out
@@ -247,7 +247,7 @@ jobs:
           CXXFLAGS: ${{ matrix.cxx_flags }}
       
       - name: Build
-        run: meson compile -C out -j 2
+        run: meson compile -C out -j 2 -v
 
       - name: Test
         run: meson test -C out

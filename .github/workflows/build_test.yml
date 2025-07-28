@@ -138,7 +138,7 @@ jobs:
           export CMAKE_BUILD_PARALLEL_LEVEL=2
           export CTEST_PARALLEL_LEVEL=2
           CXXFLAGS="${{ matrix.cxx_flags }}" CC=${{ matrix.c_compiler }} CXX=${{ matrix.cxx_compiler }} cmake -DHWY_WARNINGS_ARE_ERRORS=ON -DCMAKE_CXX_STANDARD=${{ matrix.cxx_standard }} ${{ matrix.extra_cmake_flags }} -B out .
-          cmake --build out
+          cmake --build out -v
           ctest --test-dir out
 
   cmake_ubuntu_2404:
@@ -221,7 +221,7 @@ jobs:
           export CMAKE_BUILD_PARALLEL_LEVEL=2
           export CTEST_PARALLEL_LEVEL=2
           CXXFLAGS="${{ matrix.cxx_flags }}" CC=${{ matrix.c_compiler }} CXX=${{ matrix.cxx_compiler }} cmake -DHWY_WARNINGS_ARE_ERRORS=ON -DCMAKE_CXX_STANDARD=${{ matrix.cxx_standard }} ${{ matrix.extra_cmake_flags }} -B out .
-          cmake --build out
+          cmake --build out -v
           ctest --test-dir out
 
   bazel:
