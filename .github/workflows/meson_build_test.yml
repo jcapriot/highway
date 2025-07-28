@@ -142,7 +142,7 @@ jobs:
         run: sudo apt-get install ${{ matrix.extra_deps }}
 
       - name: Configure Build
-        run: meson setup out -Dwerror=true -Dcpp_std=${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
+        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
@@ -240,7 +240,7 @@ jobs:
         run: sudo apt-get install ${{ matrix.extra_deps }}
 
       - name: Configure Build
-        run: meson setup out -Dwerror=true -Dcpp_std=${{ matrix.cxx_standard }}
+        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
