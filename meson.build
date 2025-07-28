@@ -10,7 +10,7 @@ project(
     'b_staticpic=true',
     'buildtype=debugoptimized',
     'default_library=static',
-    'warning_level=3',  # -Wall -Wextra -Wpedantic on gcc/clang, /W3 on msvc
+    'warning_level=2',  # -Wall -Wextra on gcc/clang, /W3 on msvc
     'cpp_eh=none',
     'cpp_rtti=false',
     'werror=false',  # meson has builtin warnings_are_errors option
