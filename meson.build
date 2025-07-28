@@ -17,7 +17,12 @@ project(
   ]
 )
 
+contrib_enabled = get_option('enable_contrib')
+tests_enabled = get_option('enable_tests')
+examples_enabled = get_option('enable_examples')
+
 cpp = meson.get_compiler('cpp')
+
 pkg = import('pkgconfig')
 
 have_emscripten = cpp.has_define('__EMSCRIPTEN__')
@@ -189,7 +194,8 @@ hwy_test_sources = files(
 )
 
 cpp_link_args = []
-if cpp.get_argument_syntax() == 'msvc'
+is_msvc_syntax = cpp.get_argument_syntax() == 'msvc'
+if is_msvc_syntax
     add_project_arguments(
         '/bigobj',
 
@@ -285,7 +291,7 @@ else
             )
         endif
     endif
-    if host_machine.system() == 'windows'
+    if is_windows
         if cpp.get_id() == 'clang'
             add_project_arguments(
                 '-Wno-global-constructors',
@@ -393,12 +399,15 @@ if host_machine.system() in ['linux', 'freebsd', 'netbsd', 'openbsd', 'dragonfly
     cpp_link_args += '-Wl,--version-script=' + hwy_version_file[0].full_path()
 endif
 
+hwy_shared_args = ['-DHWY_SHARED_DEFINE', '-Dhwy_EXPORTS']
+hwy_static_args = ['-DHWY_STATIC_DEFINE']
+
 hwy_lib = library(
     'hwy',
     hwy_sources,
     cpp_args: toolchain_args,
-    cpp_shared_args: ['-DHWY_SHARED_DEFINE', '-Dhwy_EXPORTS'],
-    cpp_static_args: ['-DHWY_STATIC_DEFINE'],
+    cpp_shared_args: hwy_shared_args,
+    cpp_static_args: hwy_static_args,
     link_args: cpp_link_args,
     install: true,
     pic: true,
@@ -418,7 +427,6 @@ hwy_dep = declare_dependency(
     link_with: hwy_lib,
 )
 
-
 install_headers(hwy_headers, preserve_path:true)
 
 pkg.generate(
@@ -429,7 +437,7 @@ pkg.generate(
 )
 
 atomic_dep = dependency('', required:false) # an empty dependency
-if get_option('enable_contrib') or get_option('enable_examples')
+if contrib_enabled or examples_enabled
   
     atomic_code = '''
         #include <atomic>
@@ -449,7 +457,7 @@ if get_option('enable_contrib') or get_option('enable_examples')
 endif
 
 thread_dep = dependency('', required:false) # empty thread dependency
-if get_option('enable_contrib')
+if contrib_enabled
     # these dependencies look to be only required if enable_contrib
     contrib_deps = [hwy_dep, atomic_dep]
 
@@ -461,7 +469,7 @@ if get_option('enable_contrib')
     if disable_futex
         contrib_args += '-DHWY_DISABLE_FUTEX'
     else
-        if host_machine.system() == 'windows' and cpp.get_argument_syntax() != 'msvc'
+        if is_windows and not is_msvc_syntax
             contrib_deps += cpp.find_library('synchronization', required: true)
         endif
     endif
@@ -471,8 +479,8 @@ if get_option('enable_contrib')
         hwy_contrib_sources,
         dependencies: contrib_deps,
         cpp_args: contrib_args,
-        cpp_shared_args: ['-DHWY_SHARED_DEFINE', '-Dhwy_EXPORTS'],
-        cpp_static_args: ['-DHWY_STATIC_DEFINE'],
+        cpp_shared_args: hwy_shared_args,
+        cpp_static_args: hwy_static_args,
         link_args: cpp_link_args,
         build_by_default: false, # only built if requested...
         install: true,
@@ -500,13 +508,15 @@ endif
 hwy_test_lib = library(
     'hwy_test',
     hwy_test_sources,
+    cpp_shared_args: hwy_shared_args,
+    cpp_static_args: hwy_static_args,
     link_args: cpp_link_args,
     dependencies: hwy_dep,
     pic: true,
     version: meson.project_version(),
     extra_files: hwy_version_file,
     build_by_default: false,
-    install: get_option('enable_tests'),
+    install: tests_enabled,
     gnu_symbol_visibility: 'inlineshidden',
 )
 
@@ -529,7 +539,7 @@ hwy_list_targets = executable(
     dependencies: hwy_dep,
 )
 
-if get_option('enable_tests')
+if tests_enabled
     install_headers(hwy_test_headers, preserve_path:true)
 
     pkg.generate(
@@ -539,7 +549,7 @@ if get_option('enable_tests')
     )
 endif
 
-if get_option('enable_examples')
+if examples_enabled
 
     executable(
         'hwy_benchmark',
@@ -547,7 +557,7 @@ if get_option('enable_examples')
         dependencies: [hwy_dep, atomic_dep]
     )
 
-    if get_option('enable_contrib')
+    if contrib_enabled
         executable(
             'hwy_profiler_example',
             'hwy/examples/profiler_example.cc',
@@ -557,7 +567,7 @@ if get_option('enable_examples')
 
 endif
 
-if get_option('enable_tests')
+if tests_enabled
     
     fs = import('fs')
 
@@ -571,69 +581,72 @@ if get_option('enable_tests')
             required:false,
         )
         if not gtest_main_dep.found()
-            # Use the subproject wrap file (specifically the 1.12.1 version of it that matches the cmake file)
+            # find gtest as a subproject (The wrap included here matches 1.12.1)
             # note that 1.12.1 was the last to support C++11.
             gtest_proj = subproject('gtest', default_options:[
                 'cpp_eh=default', # do not disable cpp exceptions for gtest
             ])
+            gtest_main_dep = gtest_proj.get_variable('gtest_main_dep')
+            gtest_version = gtest_main_dep.version()
+            if gtest_version.version_compare('<1.17')
+                
+                # this bit is awkward because the 1.12.1 wrap defines the dependency objects as files
+                # causing them to get recompiled with every test executable. The most recent gtest wrap builds
+                # gtest as a library, it's logic is mostly duplicated below.
 
-            # gtest_main_dep = gtest_proj.get_variable('gtest_main_dep')  # this command can be used for the wrap file from 1.17.0
-            # otherwise the logic below should be used, but we need 1.12.1 because highway supports and tests again c++11 standard.
+                #if this was still the empty dependency from before the contrib
+                if not thread_dep.found()
+                    thread_dep = dependency('threads')
+                endif
 
-            # this bit is awkward because the 1.12.1 wrap defines the dependency objects as files
-            # causing them to get recompiled with every test executable. The most recent gtest wrap builds
-            # gtest as a library, it's logic is mostly duplicated below.
+                if is_windows
+                    gtest_dllexp = '-DGTEST_CREATE_SHARED_LIBRARY=1'
+                    gtest_dllimp = '-DGTEST_LINKED_AS_SHARED_LIBRARY=1'
+                else
+                    gtest_dllexp = []
+                    gtest_dllimp = []
+                endif
 
-            #if this was still the empty dependency from before the contrib
-            if not thread_dep.found()
-                thread_dep = dependency('threads')
+                gtest_incdir = gtest_proj.get_variable('gtest_incdir')
+                gtest_libsources = gtest_proj.get_variable('gtest_libsources')
+                gtest_mainsources = gtest_proj.get_variable('gtest_mainsources')
+
+                # always build as a shared library (to avoid crt conflicts)
+                # (note that these are not installable from this project)
+                gtest_lib = shared_library(
+                    'gtest-all',
+                    gtest_libsources,
+                    gnu_symbol_visibility: 'hidden',
+                    override_options:['cpp_eh=default'],
+                    cpp_args: gtest_dllexp,
+                    dependencies: thread_dep,
+                    include_directories: gtest_incdir,
+                )
+
+                gtest_main_lib = shared_library(
+                    'gtest_main',
+                    gtest_mainsources,
+                    gnu_symbol_visibility: 'hidden',
+                    override_options:['cpp_eh=default'],
+                    cpp_args: gtest_dllexp,
+                    include_directories: gtest_incdir,
+                    link_with: gtest_lib,
+                )
+
+                gtest_dep = declare_dependency(
+                    compile_args: gtest_dllimp,
+                    include_directories: gtest_incdir,
+                    link_with: gtest_lib,
+                    dependencies: thread_dep,
+                    version: gtest_version,
+                )
+
+                gtest_main_dep = declare_dependency(
+                    link_with: gtest_main_lib,
+                    dependencies: gtest_dep,
+                    version: gtest_version,
+                )
             endif
-
-            if host_machine.system() == 'windows'
-                gtest_dllexp = '-DGTEST_CREATE_SHARED_LIBRARY=1'
-                gtest_dllimp = '-DGTEST_LINKED_AS_SHARED_LIBRARY=1'
-            else
-                gtest_dllexp = []
-                gtest_dllimp = []
-            endif
-
-            gtest_incdir = gtest_proj.get_variable('gtest_incdir')
-            gtest_libsources = gtest_proj.get_variable('gtest_libsources')
-            gtest_mainsources = gtest_proj.get_variable('gtest_mainsources')
-
-            # always build as a shared library (to avoid crt conflicts)
-            # (note that these are not installable from this project)
-            gtest_lib = shared_library(
-                'gtest-all',
-                gtest_libsources,
-                gnu_symbol_visibility: 'hidden',
-                override_options:['cpp_eh=default'],
-                cpp_args: gtest_dllexp,
-                dependencies: thread_dep,
-                include_directories: gtest_incdir,
-            )
-
-            gtest_main_lib = shared_library(
-                'gtest_main',
-                gtest_mainsources,
-                gnu_symbol_visibility: 'hidden',
-                override_options:['cpp_eh=default'],
-                cpp_args: gtest_dllexp,
-                include_directories: gtest_incdir,
-                link_with: gtest_lib,
-            )
-
-            gtest_dep = declare_dependency(
-                compile_args: gtest_dllimp,
-                include_directories: gtest_incdir,
-                link_with: gtest_lib,
-                dependencies: thread_dep,
-            )
-
-            gtest_main_dep = declare_dependency(
-                link_with: gtest_main_lib,
-                dependencies: gtest_dep,
-            )
         endif
     endif
 
@@ -733,7 +746,7 @@ if get_option('enable_tests')
         test(exe_name, test_exe, protocol:'gtest')
     endforeach
 
-    if get_option('enable_contrib')
+    if contrib_enabled
         hwy_contrib_test_files = files(
             'hwy/auto_tune_test.cc',
             'hwy/contrib/algo/copy_test.cc',
