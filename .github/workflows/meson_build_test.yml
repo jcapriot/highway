@@ -62,15 +62,6 @@ jobs:
             cxx_compiler: clang++-15
             cxx_standard: 20
 
-          # - name: Clang-15 (x86_32)
-          #   extra_deps: clang-15 g++-i686-linux-gnu
-          #   c_compiler: clang-15
-          #   cxx_compiler: clang++-15
-          #   # Disable AVX3 targets on x86_32
-          #   cxx_flags: -m32 -DHWY_DISABLED_TARGETS=0x1FF -DHWY_BROKEN_TARGETS=0x1FF
-          #   extra_meson_flags: -DCMAKE_C_COMPILER_TARGET=i686-linux-gnu -DCMAKE_CXX_COMPILER_TARGET=i686-linux-gnu -Dsse2=true
-          #   cxx_standard: 17
-
           - name: GCC-9
             extra_deps: g++-9
             c_compiler: gcc-9
@@ -113,15 +104,6 @@ jobs:
             cxx_flags: -ftrapv
             cxx_standard: 20
 
-          # - name: GCC-12 (x86_32)
-          #   extra_deps: g++-12-i686-linux-gnu
-          #   c_compiler: i686-linux-gnu-gcc-12
-          #   cxx_compiler: i686-linux-gnu-g++-12
-          #   # Disable AVX3 targets on x86_32
-          #   cxx_flags: -m32 -ftrapv -DHWY_DISABLED_TARGETS=0x1FF -DHWY_BROKEN_TARGETS=0x1FF
-          #   extra_meson_flags: -DCMAKE_C_COMPILER_TARGET=i686-linux-gnu -DCMAKE_CXX_COMPILER_TARGET=i686-linux-gnu -Dsse2=true
-          #   cxx_standard: 17
-
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
@@ -130,16 +112,8 @@ jobs:
 
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-            python-version: '3.13'
-
-      - name: Install build requirements
-        run: python -m pip install meson ninja
-
       - name: Install deps
-        run: sudo apt-get install ${{ matrix.extra_deps }}
+        run: sudo apt-get install ninja-build meson ${{ matrix.extra_deps }}
 
       - name: Configure Build
         run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
@@ -167,8 +141,7 @@ jobs:
             c_compiler: "['clang-15', '--target=i686-linux-gnu']"
             cxx_compiler: "['clang++-15', '--target=i686-linux-gnu']"
             # Disable AVX3 targets on x86_32
-            cxx_flags: -DHWY_DISABLED_TARGETS=0x1FF -DHWY_BROKEN_TARGETS=0x1FF
-            extra_meson_flags: -DCMAKE_C_COMPILER_TARGET=i686-linux-gnu -DCMAKE_CXX_COMPILER_TARGET=i686-linux-gnu
+            cxx_flags: -m32 -DHWY_DISABLED_TARGETS=0x1FF -DHWY_BROKEN_TARGETS=0x1FF
             cxx_standard: 17
 
           - name: GCC-12 (x86_32)
@@ -176,7 +149,7 @@ jobs:
             c_compiler: "'i686-linux-gnu-gcc-12'"
             cxx_compiler: "'i686-linux-gnu-g++-12'"
             # Disable AVX3 targets on x86_32
-            cxx_flags: -ftrapv -DHWY_DISABLED_TARGETS=0x1FF -DHWY_BROKEN_TARGETS=0x1FF
+            cxx_flags: -m32 -ftrapv -DHWY_DISABLED_TARGETS=0x1FF -DHWY_BROKEN_TARGETS=0x1FF
             cxx_standard: 17
 
     steps:
@@ -187,16 +160,8 @@ jobs:
 
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-            python-version: '3.13'
-
-      - name: Install build requirements
-        run: python -m pip install meson ninja
-
       - name: Install deps
-        run: sudo apt-get install ${{ matrix.extra_deps }}
+        run: sudo apt-get install ninja-build meson ${{ matrix.extra_deps }}
 
       - name: Create cross file
         run: |
@@ -294,16 +259,8 @@ jobs:
 
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-            python-version: '3.13'
-
-      - name: Install build requirements
-        run: python -m pip install meson ninja
-
       - name: Install deps
-        run: sudo apt-get install ${{ matrix.extra_deps }}
+        run: sudo apt-get install ninja-build meson ${{ matrix.extra_deps }}
 
       - name: Configure Build
         run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }}
