@@ -164,8 +164,8 @@ jobs:
         include:
           - name: Clang-15 (x86_32)
             extra_deps: clang-15 g++-i686-linux-gnu
-            c_compiler: "'[clang-15, -target=i686-linux-gnu]'"
-            cxx_compiler: "'[clang++-15, -target=i686-linux-gnu]'"
+            c_compiler: "['clang-15', '-target=i686-linux-gnu']"
+            cxx_compiler: "['clang++-15', '-target=i686-linux-gnu']"
             # Disable AVX3 targets on x86_32
             cxx_flags: -DHWY_DISABLED_TARGETS=0x1FF -DHWY_BROKEN_TARGETS=0x1FF
             extra_meson_flags: -DCMAKE_C_COMPILER_TARGET=i686-linux-gnu -DCMAKE_CXX_COMPILER_TARGET=i686-linux-gnu
