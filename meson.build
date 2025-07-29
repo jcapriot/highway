@@ -40,32 +40,6 @@ if 'loongarch' in host_machine.cpu_family()
 endif
 
 is_windows = host_machine.system() == 'windows'
-has_win_synchronization_lib = false
-if is_windows
-    has_win_synchronization_lib = cpp.compiles(
-        '''
-        #ifndef NOMINMAX
-        #define NOMINMAX
-        #endif
-
-        #include <windows.h>
-
-        int main() {
-            unsigned val1 = 0u;
-            unsigned val2 = 1u;
-            WaitOnAddress(&val1, &val2, sizeof(unsigned), 1);
-            WakeByAddressAll(&val1);
-            WakeByAddressSingle(&val1);
-            return 0;
-        }
-        '''
-    )
-endif
-
-disable_futex = get_option('disable_futex')
-if not has_win_synchronization_lib and is_windows
-    disable_futex = true
-endif
 
 riscv_xlen = 0
 if have_riscv or 'riscv' in host_machine.cpu_family()
@@ -472,12 +446,45 @@ if contrib_enabled
 
     contrib_args = []
 
+    disable_futex = get_option('disable_futex')
+    if is_windows and not is_msvc_syntax and not disable_futex
+        synch_dep = cpp.find_library('synchronization', required:false)
+        if synch_dep.found()
+            # double check it can compile with synchronization
+            synch_compiles = cpp.compiles(
+                    '''
+                    #ifndef NOMINMAX
+                    #define NOMINMAX
+                    #endif
+
+                    #include <windows.h>
+
+                    int main() {
+                        unsigned val1 = 0u;
+                        unsigned val2 = 1u;
+                        WaitOnAddress(&val1, &val2, sizeof(unsigned), 1);
+                        WakeByAddressAll(&val1);
+                        WakeByAddressSingle(&val1);
+                        return 0;
+                    }
+                    ''',
+                    dependencies: synch_dep,
+                    required: false
+            )
+            if synch_compiles
+                contrib_deps += synch_dep
+            else
+                # if it doesn't compile
+                disable_futex = true
+            endif
+        else
+            # if synch is not found
+            disable_futex = true
+        endif
+    endif
+
     if disable_futex
         contrib_args += '-DHWY_DISABLE_FUTEX'
-    else
-        if is_windows and not is_msvc_syntax
-            contrib_deps += cpp.find_library('synchronization', required: true)
-        endif
     endif
 
     hwy_contrib_lib = library(
