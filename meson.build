@@ -594,11 +594,13 @@ if tests_enabled
             required:false,
         )
         if not gtest_main_dep.found()
+            gtest_build_overrides = [
+                'cpp_eh=default',  # do not disable cpp exceptions for gtest
+                'werror=false',  # do not error on warnings building gtest
+            ]
             # find gtest as a subproject (The wrap included here matches 1.12.1)
             # note that 1.12.1 was the last to support C++11.
-            gtest_proj = subproject('gtest', default_options:[
-                'cpp_eh=default', # do not disable cpp exceptions for gtest
-            ])
+            gtest_proj = subproject('gtest', default_options:gtest_build_overrides)
             gtest_main_dep = gtest_proj.get_variable('gtest_main_dep')
             gtest_version = gtest_main_dep.version()
             if gtest_version.version_compare('<1.15.2')
@@ -630,7 +632,7 @@ if tests_enabled
                     'gtest-all',
                     gtest_libsources,
                     gnu_symbol_visibility: 'hidden',
-                    override_options:['cpp_eh=default'],
+                    override_options:gtest_build_overrides,
                     cpp_args: gtest_dllexp,
                     dependencies: thread_dep,
                     include_directories: gtest_incdir,
@@ -640,7 +642,7 @@ if tests_enabled
                     'gtest_main',
                     gtest_mainsources,
                     gnu_symbol_visibility: 'hidden',
-                    override_options:['cpp_eh=default'],
+                    override_options:gtest_build_overrides,
                     cpp_args: gtest_dllexp,
                     include_directories: gtest_incdir,
                     link_with: gtest_lib,
