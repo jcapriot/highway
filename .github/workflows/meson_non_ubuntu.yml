@@ -1,0 +1,126 @@
+# Copyright 2021 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+permissions: read-all
+name: Meson Build / test
+on: [push, pull_request]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  meson_win:
+    name: Meson build and test ${{ matrix.name }} on windows
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        include:
+
+          - name: MSVC
+            c_compiler: cl
+            cxx_compiler: cl
+            extra_mesons_flags: -Dvsenv=true
+            cxx_standard: 17
+
+          - name: LLVM-CL
+            extra_deps: llvm --version=20
+            c_compiler: clang-cl
+            cxx_compiler: clang-cl
+            extra_mesons_flags: -Dvsenv=true
+            cxx_standard: 17
+
+          - name: LLVM
+            extra_deps: llvm --version=20
+            c_compiler: clang
+            cxx_compiler: clang++
+            cxx_standard: 17
+
+          - name: GNU
+            c_compiler: gcc
+            cxx_compiler: g++
+            cxx_standard: 17
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        with:
+          egress-policy: audit  # cannot be block - runner does git checkout
+
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
+
+      - name: Install deps
+        run: choco install meson ${{ matrix.extra_deps }}
+
+      - name: Configure Build
+        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
+        env:
+          CXX: ${{matrix.cxx_compiler}}
+          CC: ${{matrix.c_compiler}}
+          CXXFLAGS: ${{ matrix.cxx_flags }}
+      
+      - name: Build
+        run: meson compile -C out -j 2 -v
+
+      - name: Test
+        run: meson test -C out -j 2
+
+  meson_macos_arm:
+    name: Meson build and test ${{ matrix.name }} on ${{ matrix.os }}
+    runs-on: macos-15
+    strategy:
+      matrix:
+        os: [macos-15, macos-15-large]
+        compiler: [apple, llvm, gnu]
+        cxx_standard: [17]
+        include:
+          - compiler: apple
+            name: AppleLLVM
+            c_compiler: clang
+            cxx_compiler: clang++
+            
+          - compiler: llvm
+            extra_deps: llvm@20 lld@20
+            name: LLVM
+            c_compiler: $(brew --prefix llvm@20)/bin/clang
+            cxx_compiler: $(brew --prefix llvm@20)/bin/clang++
+            
+          - compiler: gnu
+            name: GNU
+            extra_deps: gcc@15
+            c_compiler: gcc-15
+            cxx_compiler: g++-15
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        with:
+          egress-policy: audit  # cannot be block - runner does git checkout
+
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
+
+      - name: Install deps
+        run: homebrew install meson ${{ matrix.extra_deps }}
+
+      - name: Configure Build
+        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
+        env:
+          CXX: ${{matrix.cxx_compiler}}
+          CC: ${{matrix.c_compiler}}
+          CXXFLAGS: ${{ matrix.cxx_flags }}
+      
+      - name: Build
+        run: meson compile -C out -j 2 -v
+
+      - name: Test
+        run: meson test -C out -j 2
