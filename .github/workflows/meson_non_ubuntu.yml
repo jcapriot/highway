@@ -97,6 +97,10 @@ jobs:
             extra_deps: gcc@15
             c_compiler: gcc-15
             cxx_compiler: g++-15
+            
+          - compiler: gnu
+            os: macos-13
+            cxx_flags: -D'HWY_ATTAINABLE_TARGETS_X86=HWY_AVX2 | HWY_SSE4 | HWY_SSE2 | HWY_BASELINE_SCALAR'
 
     steps:
       - name: Harden Runner
