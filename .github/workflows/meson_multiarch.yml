@@ -37,10 +37,10 @@ jobs:
           apt-get install -q -y --no-install-recommends \
                 build-essential \
                 libgtest-dev \
-                python3 \
-                python3-pip \
+                ninja-build \
+                pipx \
                 ;
-          python3 -m pip install meson ninja
+          pipx install meson
         run: |
           CXXFLAGS=${{ matrix.cxx_flags }} meson setup out -Dwerror=true -Darm7=true
           meson compile -C out -j 2 -v
@@ -163,6 +163,6 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out
+        run: meson test -C out --timeout-multiplier 5
         env:
           MESON_NUM_PROCESSES: 2
