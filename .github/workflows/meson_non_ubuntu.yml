@@ -13,7 +13,7 @@
 # limitations under the License.
 
 permissions: read-all
-name: Meson Build / test
+name: Meson build & test MacOS and Windows
 on: [push, pull_request]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -75,12 +75,12 @@ jobs:
       - name: Test
         run: meson test -C out -j 2
 
-  meson_macos_arm:
+  meson_macos:
     name: Meson build and test ${{ matrix.name }} on ${{ matrix.os }}
     runs-on: macos-15
     strategy:
       matrix:
-        os: [macos-15, macos-15-large]
+        os: [macos-15, macos-15-large]  # macos-15 is arm, macos-15-large is x86_64
         compiler: [apple, llvm, gnu]
         cxx_standard: [17]
         include:

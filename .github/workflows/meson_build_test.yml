@@ -13,7 +13,7 @@
 # limitations under the License.
 
 permissions: read-all
-name: Meson Build / test
+name: Meson build / test
 on: [push, pull_request]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
