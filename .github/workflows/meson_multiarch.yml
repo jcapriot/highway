@@ -38,6 +38,7 @@ jobs:
                 build-essential \
                 libgtest-dev \
                 python3 \
+                python3-pip \
                 ;
           python3 -m pip install meson ninja
         run: |
@@ -147,7 +148,7 @@ jobs:
           echo "ar = 'loongarch64-unknown-linux-gnu-ar'" >> la64_cross_file.txt
           echo "strip = 'loongarch64-unknown-linux-gnu-strip'" >> la64_cross_file.txt
           echo "pkgconfig = 'pkg-config'" >> la64_cross_file.txt
-          echo "exe_wrapper = ['qemu-loongarch64','-cpu max', '-L /opt/cross-tools/target']" >> la64_cross_file.txt
+          echo "exe_wrapper = ['qemu-loongarch64','-cpu','max','-L','/opt/cross-tools/target']" >> la64_cross_file.txt
           echo "" >> la64_cross_file.txt
           echo "[host_machine]" >> la64_cross_file.txt
           echo "system = 'linux'" >> la64_cross_file.txt
