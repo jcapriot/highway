@@ -130,7 +130,6 @@ jobs:
 
       - name: Install deps
         run: |
-          sudo apt-get install ninja-build meson
           wget https://github.com/loongson/build-tools/releases/download/2025.02.21/${{ matrix.extra_deps }}
           chmod +x ${{ matrix.extra_deps }}
           sudo mv ${{ matrix.extra_deps }} /opt/cross-tools/bin
