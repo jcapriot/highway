@@ -34,7 +34,7 @@ jobs:
         githubToken: ${{ github.token }}
         install: |
           apt-get update -q -y
-          c -q -y --no-install-recommends \
+          apt-get install -q -y --no-install-recommends \
                 build-essential \
                 libgtest-dev \
                 python3
@@ -137,8 +137,8 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo 'PATH="/opt/cross-tools/bin:$PATH"' >> $GITHUB_ENV
-          echo 'LD_LIBRARY_PATH="/opt/cross-tools/loongarch64-unknown-linux-gnu/lib:$LD_LIBRARY_PATH"' >> $GITHUB_ENV
+          echo "/opt/cross-tools/bin" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=/opt/cross-tools/loongarch64-unknown-linux-gnu/lib:\$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
       - name: Create cross file
         run: |
