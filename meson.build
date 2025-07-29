@@ -468,8 +468,7 @@ if contrib_enabled
                         return 0;
                     }
                     ''',
-                    dependencies: synch_dep,
-                    required: false
+                    dependencies: synch_dep
             )
             if synch_compiles
                 contrib_deps += synch_dep
