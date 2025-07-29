@@ -41,8 +41,8 @@ jobs:
                 pipx \
                 ;
           pipx install meson
-          pipx ensurepath
         run: |
+          export PATH="/root/.local/bin:$PATH"
           CXXFLAGS=${{ matrix.cxx_flags }} meson setup out -Dwerror=true -Darm7=true
           meson compile -C out -j 2 -v
           export MESON_NUM_PRECESSES=2
