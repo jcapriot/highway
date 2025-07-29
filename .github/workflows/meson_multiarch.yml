@@ -18,6 +18,7 @@ jobs:
         include:
           - arch: armv7
             distro: ubuntu_latest  # at 24.04 according to uraimo/run-on-arch-action@v3.0.1
+            meson_flags: -Darm7=true
             cxx_flags: -Wno-psabi
           - arch: ppc64le
             distro: ubuntu_latest
@@ -43,7 +44,7 @@ jobs:
         run: |
           command -v c++
           command -v g++
-          CXXFLAGS=${{ matrix.cxx_flags }} CXX=g++ CC=gcc meson setup out -Dwerror=true -Darm7=true
+          CXXFLAGS=${{ matrix.cxx_flags }} CXX=g++ CC=gcc meson setup out -Dwerror=true ${{ matrix.meson_flags }}
           meson compile -C out -j 2 -v
           meson test -C out -j 2
 
