@@ -117,6 +117,7 @@ jobs:
         with:
             python-version: '3.13'
 
+        # meson on jammy is at version 0.61.2, so install through pypi
       - name: Install build requirements
         run: python -m pip install meson ninja
 
@@ -134,9 +135,7 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out
-        env:
-          MESON_NUM_PROCESSES: 2
+        run: meson test -C out -j 2
 
   meson_i686:
     name: Meson build and test ${{ matrix.name }}
@@ -199,9 +198,7 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out
-        env:
-          MESON_NUM_PROCESSES: 2
+        run: meson test -C out -j 2
 
   meson_ubuntu_2404:
     name: Meson build and test ${{ matrix.name }}
@@ -275,16 +272,9 @@ jobs:
 
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-            python-version: '3.13'
-
-      - name: Install build requirements
-        run: python -m pip install meson ninja
-
+        # meson on noble is at 1.3.2
       - name: Install deps
-        run: sudo apt-get install ${{ matrix.extra_deps }}
+        run: sudo apt-get install ninja-build meson ${{ matrix.extra_deps }}
 
       - name: Configure Build
         run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }}
@@ -297,6 +287,4 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out
-        env:
-          MESON_NUM_PROCESSES: 2
+        run: meson test -C out -j 2

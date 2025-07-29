@@ -17,7 +17,7 @@ jobs:
       matrix:
         include:
           - arch: armv7
-            distro: ubuntu_latest
+            distro: ubuntu_latest  # at 24.04 according to uraimo/run-on-arch-action@v3.0.1
             cxx_flags: -Wno-psabi
           - arch: ppc64le
             distro: ubuntu_latest
@@ -38,15 +38,12 @@ jobs:
                 build-essential \
                 libgtest-dev \
                 ninja-build \
-                pipx \
+                meson \
                 ;
-          pipx install meson
         run: |
-          export PATH="/root/.local/bin:$PATH"
           CXXFLAGS=${{ matrix.cxx_flags }} meson setup out -Dwerror=true -Darm7=true
           meson compile -C out -j 2 -v
-          export MESON_NUM_PRECESSES=2
-          meson test -C out
+          meson test -C out -j 2
 
   aarch64_cmake:
     name: Build and test ${{ matrix.name }} on AArch64
@@ -75,16 +72,8 @@ jobs:
 
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-            python-version: '3.13'
-
-      - name: Install build requirements
-        run: python -m pip install meson ninja
-
       - name: Install deps
-        run: sudo apt-get install ${{ matrix.extra_deps }}
+        run: sudo apt-get install ninja-build meson ${{ matrix.extra_deps }}
 
       - name: Configure Build
         run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }}
@@ -97,9 +86,7 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out
-        env:
-          MESON_NUM_PROCESSES: 2
+        run: meson test -C out -j 2
 
   loongarch64_cmake:
     name: Build and test ${{ matrix.name }} on LoongArch64
@@ -122,13 +109,8 @@ jobs:
 
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-            python-version: '3.13'
-
       - name: Install build requirements
-        run: python -m pip install meson ninja
+        run: sudo apt-get ninja-build meson
 
       - name: Install deps
         run: |
@@ -164,6 +146,4 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out --timeout-multiplier 5
-        env:
-          MESON_NUM_PROCESSES: 2
+        run: meson test -C out -j 2
