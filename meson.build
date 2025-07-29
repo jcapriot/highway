@@ -588,10 +588,10 @@ if tests_enabled
             ])
             gtest_main_dep = gtest_proj.get_variable('gtest_main_dep')
             gtest_version = gtest_main_dep.version()
-            if gtest_version.version_compare('<1.17')
+            if gtest_version.version_compare('<1.15.2')
                 
                 # this bit is awkward because the 1.12.1 wrap defines the dependency objects as files
-                # causing them to get recompiled with every test executable. The most recent gtest wrap builds
+                # causing them to get recompiled with every test executable. The gtest wrap for version 1.15.2-2 was first to build
                 # gtest as a library, it's logic is mostly duplicated below.
 
                 #if this was still the empty dependency from before the contrib
@@ -724,7 +724,7 @@ if tests_enabled
     
     test_exe_link_args = []
     if have_emscripten
-        test_exe_link_args += ['-s SINGLE_FILE=1']
+        test_exe_link_args += ['-s', 'SINGLE_FILE=1']
     endif
 
     foreach test_src : hwy_test_files
@@ -765,7 +765,7 @@ if tests_enabled
             'hwy/contrib/sort/sort_unit_test.cc',
             'hwy/contrib/thread_pool/spin_test.cc',
             'hwy/contrib/thread_pool/thread_pool_test.cc',
-            'hwy/contrib/thread_pool/topology_test.cc',
+            'hwy/contrib/thread_pool/topology_test.cc',  # note that this test fails on windows for some reason....
             'hwy/contrib/unroller/unroller_test.cc',
         )
 
