@@ -393,10 +393,11 @@ endif
 
 hwy_include_dir = include_directories('.')
 
-hwy_version_file = files('hwy/hwy.version')
-
+hwy_version_file = 'hwy'/'hwy.version'
+hwy_link_depends = []
 if host_machine.system() in ['linux', 'freebsd', 'netbsd', 'openbsd', 'dragonfly', 'sunos']
-    cpp_link_args += '-Wl,--version-script=' + hwy_version_file[0].full_path()
+    hwy_link_depends += files(hwy_version_file)
+    cpp_link_args += '-Wl,--version-script=' + meson.current_source_dir() / hwy_version_file
 endif
 
 hwy_shared_args = ['-DHWY_SHARED_DEFINE', '-Dhwy_EXPORTS']
@@ -412,7 +413,7 @@ hwy_lib = library(
     install: true,
     pic: true,
     version: meson.project_version(),
-    link_depends: hwy_version_file,
+    link_depends: hwy_link_depends,
     gnu_symbol_visibility: 'inlineshidden',
 )
 
@@ -486,7 +487,7 @@ if contrib_enabled
         install: true,
         pic: true,
         version: meson.project_version(),
-        link_depends: hwy_version_file,
+        link_depends: hwy_link_depends,
         gnu_symbol_visibility: 'inlineshidden',
     )
 
@@ -514,7 +515,7 @@ hwy_test_lib = library(
     dependencies: hwy_dep,
     pic: true,
     version: meson.project_version(),
-    extra_files: hwy_version_file,
+    link_depends: hwy_link_depends,
     build_by_default: false,
     install: tests_enabled,
     gnu_symbol_visibility: 'inlineshidden',
@@ -765,7 +766,7 @@ if tests_enabled
             'hwy/contrib/sort/sort_unit_test.cc',
             'hwy/contrib/thread_pool/spin_test.cc',
             'hwy/contrib/thread_pool/thread_pool_test.cc',
-            'hwy/contrib/thread_pool/topology_test.cc',  # note that this test fails on windows for some reason....
+            'hwy/contrib/thread_pool/topology_test.cc',  # note that this test fails on windows for some reason... (seems related to the ForEachSLPI function)
             'hwy/contrib/unroller/unroller_test.cc',
         )
 
