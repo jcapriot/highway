@@ -41,7 +41,7 @@ jobs:
                 pipx \
                 ;
           pipx install meson
-          pipx ensurespath
+          pipx ensurepath
         run: |
           CXXFLAGS=${{ matrix.cxx_flags }} meson setup out -Dwerror=true -Darm7=true
           meson compile -C out -j 2 -v
