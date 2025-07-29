@@ -13,7 +13,7 @@
 # limitations under the License.
 
 permissions: read-all
-name: Meson build & test MacOS and Windows
+name: Meson build / test MacOS and Windows
 on: [push, pull_request]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -26,26 +26,26 @@ jobs:
     strategy:
       matrix:
         include:
-
+            # These are all preconfigured on the windows runner at the moment
           - name: MSVC
             c_compiler: cl
             cxx_compiler: cl
             extra_mesons_flags: -Dvsenv=true
             cxx_standard: 17
 
+            # LLVM is at 20.1.8 on curretn windows-2022 runner
           - name: LLVM-CL
-            extra_deps: llvm --version=20
             c_compiler: clang-cl
             cxx_compiler: clang-cl
             extra_mesons_flags: -Dvsenv=true
             cxx_standard: 17
 
           - name: LLVM
-            extra_deps: llvm --version=20
             c_compiler: clang
             cxx_compiler: clang++
             cxx_standard: 17
 
+            #G++ is 
           - name: GNU
             c_compiler: gcc
             cxx_compiler: g++
@@ -60,7 +60,8 @@ jobs:
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
       - name: Install deps
-        run: choco install meson ${{ matrix.extra_deps }}
+        run: |
+            choco install meson
 
       - name: Configure Build
         run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
@@ -110,7 +111,7 @@ jobs:
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
       - name: Install deps
-        run: homebrew install meson ${{ matrix.extra_deps }}
+        run: brew install meson ${{ matrix.extra_deps }}
 
       - name: Configure Build
         run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
