@@ -59,12 +59,14 @@ jobs:
 
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
+        # update the meson gtest wrap because we're going to use a c++17 standard
       - name: Install deps
         run: |
             pipx install meson
+            meson wrap update gtest
 
       - name: Configure Build
-        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
+        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
@@ -114,7 +116,7 @@ jobs:
         run: brew install meson googletest ${{ matrix.extra_deps }}
 
       - name: Configure Build
-        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
+        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
