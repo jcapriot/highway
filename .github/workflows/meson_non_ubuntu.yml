@@ -100,7 +100,7 @@ jobs:
             
           - compiler: gnu
             os: macos-13
-            cxx_flags: -D'HWY_ATTAINABLE_TARGETS_X86=HWY_AVX2 | HWY_SSE4 | HWY_SSE2 | HWY_BASELINE_SCALAR'
+            cxx_flags: -D'HWY_ATTAINABLE_TARGETS_X86="HWY_AVX2 | HWY_SSE4 | HWY_SSE2 | HWY_BASELINE_SCALAR"'
 
     steps:
       - name: Harden Runner
