@@ -61,7 +61,7 @@ jobs:
 
       - name: Install deps
         run: |
-            choco install meson
+            pipx install meson
 
       - name: Configure Build
         run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
@@ -111,7 +111,7 @@ jobs:
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
       - name: Install deps
-        run: brew install meson ${{ matrix.extra_deps }}
+        run: brew install meson googletest ${{ matrix.extra_deps }}
 
       - name: Configure Build
         run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
