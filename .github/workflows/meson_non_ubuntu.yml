@@ -95,14 +95,8 @@ jobs:
           - compiler: llvm
             extra_deps: llvm@20 lld@20
             name: LLVM
-            c_compiler: $(brew --prefix llvm@20)/bin/clang
-            cxx_compiler: $(brew --prefix llvm@20)/bin/clang++
-            
-          - compiler: gnu
-            name: GNU
-            extra_deps: gcc@15
-            c_compiler: gcc-15
-            cxx_compiler: g++-15
+            c_compiler: /opt/homebrew/opt/llvm/bin/clang
+            cxx_compiler: /opt/homebrew/opt/llvm/bin/clang++
 
     steps:
       - name: Harden Runner
@@ -115,12 +109,17 @@ jobs:
       - name: Install deps
         run: brew install meson googletest ${{ matrix.extra_deps }}
 
+      - name: Set compiler variables
+        run: |
+            echo "CXX=$(brew --prefix llvm@20)/bin/clang++" >> $GITHUB_ENV
+            echo "CC=$(brew --prefix llvm@20)/bin/clang" >> $GITHUB_ENV
+
       - name: Configure Build
-        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
-        env:
-          CXX: ${{matrix.cxx_compiler}}
-          CC: ${{matrix.c_compiler}}
-          CXXFLAGS: ${{ matrix.cxx_flags }}
+        run: |
+            CXX=${{ matrix.cxx_compiler }}
+            CC=${{ matrix.c_compiler }}
+            CXXFLAGS=${{ matrix.cxx_flags }}
+            meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
       
       - name: Build
         run: meson compile -C out -j 2 -v
