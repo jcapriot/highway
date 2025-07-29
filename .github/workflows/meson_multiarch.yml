@@ -107,8 +107,6 @@ jobs:
         include:
           - name: GCC-14
             extra_deps: qemu-loongarch64
-            c_compiler: loongarch64-unknown-linux-gnu-gcc
-            cxx_compiler: loongarch64-unknown-linux-gnu-g++
             cxx_standard: 17
     steps:
       - name: get cross-tools evn
@@ -145,8 +143,8 @@ jobs:
       - name: Create cross file
         run: |
           echo "[binaries]" > la64_cross_file.txt
-          echo "c = ${{matrix.c_compiler}}" >> la64_cross_file.txt
-          echo "cpp = ${{matrix.cxx_compiler}}" >> la64_cross_file.txt
+          echo "c = 'loongarch64-unknown-linux-gnu-gcc'" >> la64_cross_file.txt
+          echo "cpp = 'loongarch64-unknown-linux-gnu-g++'" >> la64_cross_file.txt
           echo "ar = 'loongarch64-unknown-linux-gnu-ar'" >> la64_cross_file.txt
           echo "strip = 'loongarch64-unknown-linux-gnu-strip'" >> la64_cross_file.txt
           echo "pkgconfig = 'pkg-config'" >> la64_cross_file.txt
