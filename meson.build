@@ -357,12 +357,16 @@ else
     endif
 
     if have_riscv and get_option('rvv')
+        riscv_arg = ''
         if riscv_xlen == '64'
-            add_project_arguments('-march=rv64gcv1p0', language: 'cpp')
-            cpp_link_args += '-march=rv64gcv1p0'
+            riscv_arg = '-march=rv64gcv1p0'
         elif riscv_xlen == '32'
-            add_project_arguments('-march=rv32gcv1p0', language: 'cpp')
-            cpp_link_args += '-march=rv32gcv1p0'
+            riscv_arg = '-march=rv32gcv1p0'
+        endif
+
+        if riscv_args != ''
+            add_project_arguments(riscv_arg, language: 'cpp')
+            add_project_link_arguments(riscv_arg, language: 'cpp')
         endif
 
         if cpp.get_id() == 'clang'
@@ -394,10 +398,11 @@ endif
 hwy_include_dir = include_directories('.')
 
 hwy_version_file = 'hwy'/'hwy.version'
+lib_link_args = cpp.first_supported_link_argument('-Wl,--version-script=' + meson.current_source_dir() / hwy_version_file)
+
 hwy_link_depends = []
-if host_machine.system() in ['linux', 'freebsd', 'netbsd', 'openbsd', 'dragonfly', 'sunos']
+if lib_link_args.length() > 0
     hwy_link_depends += files(hwy_version_file)
-    cpp_link_args += '-Wl,--version-script=' + meson.current_source_dir() / hwy_version_file
 endif
 
 hwy_shared_args = ['-DHWY_SHARED_DEFINE', '-Dhwy_EXPORTS']
@@ -409,7 +414,7 @@ hwy_lib = library(
     cpp_args: toolchain_args,
     cpp_shared_args: hwy_shared_args,
     cpp_static_args: hwy_static_args,
-    link_args: cpp_link_args,
+    link_args: lib_link_args,
     install: true,
     pic: true,
     version: meson.project_version(),
@@ -482,7 +487,7 @@ if contrib_enabled
         cpp_args: contrib_args,
         cpp_shared_args: hwy_shared_args,
         cpp_static_args: hwy_static_args,
-        link_args: cpp_link_args,
+        link_args: lib_link_args,
         build_by_default: false, # only built if requested...
         install: true,
         pic: true,
@@ -511,7 +516,7 @@ hwy_test_lib = library(
     hwy_test_sources,
     cpp_shared_args: hwy_shared_args,
     cpp_static_args: hwy_static_args,
-    link_args: cpp_link_args,
+    link_args: lib_link_args,
     dependencies: hwy_dep,
     pic: true,
     version: meson.project_version(),
