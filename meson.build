@@ -41,6 +41,9 @@ endif
 
 is_windows = host_machine.system() == 'windows'
 
+pie = get_option('b_pie') and not is_windows
+static_pic = get_option('b_staticpic') and not is_windows
+
 riscv_xlen = 0
 if have_riscv or 'riscv' in host_machine.cpu_family()
     riscv_xlen = cpp.get_define('__riscv_xlen')
@@ -390,7 +393,7 @@ hwy_lib = library(
     cpp_static_args: hwy_static_args,
     link_args: lib_link_args,
     install: true,
-    pic: not is_windows,
+    pic: static_pic,
     version: meson.project_version(),
     link_depends: hwy_link_depends,
     gnu_symbol_visibility: 'inlineshidden',
@@ -496,7 +499,7 @@ if contrib_enabled
         link_args: lib_link_args,
         build_by_default: false, # only built if requested...
         install: true,
-        pic: not is_windows,
+        pic: static_pic,
         version: meson.project_version(),
         link_depends: hwy_link_depends,
         gnu_symbol_visibility: 'inlineshidden',
@@ -524,7 +527,7 @@ hwy_test_lib = library(
     cpp_static_args: hwy_static_args,
     link_args: lib_link_args,
     dependencies: hwy_dep,
-    pic: not is_windows,
+    pic: static_pic,
     version: meson.project_version(),
     link_depends: hwy_link_depends,
     build_by_default: false,
@@ -549,6 +552,7 @@ hwy_list_targets = executable(
     'hwy_list_targets',
     'hwy/tests/list_targets.cc',
     dependencies: hwy_dep,
+    pie: pie,
 )
 
 if tests_enabled
@@ -566,14 +570,16 @@ if examples_enabled
     executable(
         'hwy_benchmark',
         'hwy/examples/benchmark.cc',
-        dependencies: [hwy_dep, atomic_dep]
+        dependencies: [hwy_dep, atomic_dep],
+        pie: pie,
     )
 
     if contrib_enabled
         executable(
             'hwy_profiler_example',
             'hwy/examples/profiler_example.cc',
-            dependencies: [hwy_dep, hwy_contrib_dep]
+            dependencies: [hwy_dep, hwy_contrib_dep],
+            pie: pie,
         )
     endif
 
@@ -755,6 +761,7 @@ if tests_enabled
             cpp_args: test_exe_args,
             dependencies: [hwy_test_dep, gtest_main_dep],
             link_args: test_exe_link_args,
+            pie: pie,
         )
         
         test(exe_name, test_exe, protocol:'gtest')
@@ -792,6 +799,7 @@ if tests_enabled
                 cpp_args: test_exe_args,
                 dependencies: [hwy_test_dep, hwy_contrib_dep, gtest_main_dep],
                 link_args: test_exe_link_args,
+                pie: pie,
             )
 
             test(exe_name, test_exe, protocol:'gtest', suite:'contrib', timeout: (exe_name == 'sort_test')? 90 : 30)
