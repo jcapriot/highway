@@ -33,7 +33,7 @@ jobs:
             extra_mesons_flags: -Dvsenv=true
             cxx_standard: 17
 
-            # LLVM is at 20.1.8 on curretn windows-2022 runner
+            # LLVM is at 20.1.8 on current windows-2022 runner
           - name: LLVM-CL
             c_compiler: clang-cl
             cxx_compiler: clang-cl
@@ -43,12 +43,6 @@ jobs:
           - name: LLVM
             c_compiler: clang
             cxx_compiler: clang++
-            cxx_standard: 17
-
-            #G++ is 
-          - name: GNU
-            c_compiler: gcc
-            cxx_compiler: g++
             cxx_standard: 17
 
     steps:
@@ -95,8 +89,14 @@ jobs:
           - compiler: llvm
             extra_deps: llvm@20 lld@20
             name: LLVM
-            c_compiler: /opt/homebrew/opt/llvm/bin/clang
-            cxx_compiler: /opt/homebrew/opt/llvm/bin/clang++
+            c_compiler: $(brew --prefix llvm@20)/bin/clang
+            cxx_compiler: $(brew --prefix llvm@20)/bin/clang++
+            
+          - compiler: gnu
+            name: GNU
+            extra_deps: gcc@15
+            c_compiler: gcc-15
+            cxx_compiler: g++-15
 
     steps:
       - name: Harden Runner
@@ -109,15 +109,10 @@ jobs:
       - name: Install deps
         run: brew install meson googletest ${{ matrix.extra_deps }}
 
-      - name: Set compiler variables
-        run: |
-            echo "CXX=$(brew --prefix llvm@20)/bin/clang++" >> $GITHUB_ENV
-            echo "CC=$(brew --prefix llvm@20)/bin/clang" >> $GITHUB_ENV
-
       - name: Configure Build
         run: |
-            CXX=${{ matrix.cxx_compiler }}
             CC=${{ matrix.c_compiler }}
+            CXX=${{ matrix.cxx_compiler }}
             CXXFLAGS=${{ matrix.cxx_flags }}
             meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
       
