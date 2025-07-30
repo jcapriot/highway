@@ -43,6 +43,7 @@ jobs:
                 ;
         run: |
           CXXFLAGS=${{ matrix.cxx_flags }} meson setup out -Dwerror=true ${{ matrix.meson_flags }}
+          meson compile -C out -j 2 -v
           meson test -C out -j 2 -v
 
   aarch64_cmake:
@@ -82,7 +83,10 @@ jobs:
           CC: ${{matrix.c_compiler}}
           CXXFLAGS: ${{ matrix.cxx_flags }}
 
-      - name: Build & Test
+      - name: Build
+        run: meson compile -C out -j 2 -v
+
+      - name: Test
         run: meson test -C out -j 2 -v
 
   loongarch64_cmake:
@@ -139,5 +143,8 @@ jobs:
       - name: Configure Build
         run: meson setup out --cross-file la64_cross_file.txt -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }}
 
-      - name: Build & Test
-        run: meson test -C out -j 2 -v --timeout-multiplier 5
+      - name: Build
+        run: meson compile -C out -j 2 -v
+
+      - name: Test
+        run: meson test -C out -j 2 -v
