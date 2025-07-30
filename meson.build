@@ -863,6 +863,6 @@ if get_option('report_targets')
     endforeach
 
     foreach target : hwy_enabled_targets
-        message(target + 'enabled')
+        message(target + ' enabled')
     endforeach
 endif
