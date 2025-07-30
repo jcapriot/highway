@@ -71,8 +71,9 @@ jobs:
           meson compile -C out hwy_list_targets
           out\hwy_list_targets
 
+        # this keeps building until 3 have been ecountered
       - name: Build
-        run: meson build -C out -j 2 -v
+        run: meson compile -C out -j 2 -v --ninja-args=-k,3
 
       - name: Test
         run: meson test -C out -j 2 -v
@@ -135,7 +136,7 @@ jobs:
           out/hwy_list_targets
 
       - name: Build
-        run: meson build -C out -j 2 -v
+        run: meson compile -C out -j 2 -v
 
       - name: Test
         run: meson test -C out -j 2 -v
