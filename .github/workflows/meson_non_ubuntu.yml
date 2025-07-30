@@ -21,11 +21,13 @@ concurrency:
 
 jobs:
   meson_win:
-    name: Meson build and test ${{ matrix.name }} on windows
-    runs-on: windows-2022
+    name: Meson build and test ${{ matrix.name }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     continue-on-error: true
     strategy:
       matrix:
+        os: [windows-2022, windows-11-arm]
+        name: ['MSVC', 'LLVM-CL']
         include:
             # These are all preconfigured on the windows runner at the moment
           - name: MSVC
@@ -42,12 +44,6 @@ jobs:
             extra_mesons_flags: -Dvsenv=true
             cxx_flags: /DHWY_DISABLED_TARGETS=0x58
             cxx_standard: 17
-
-          - name: LLVM
-            c_compiler: clang
-            cxx_compiler: clang++
-            cxx_standard: 17
-            cxx_flags: -DHWY_DISABLED_TARGETS=0x58
 
     steps:
       - name: Harden Runner
