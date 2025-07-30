@@ -358,9 +358,8 @@ else
 endif
 
 if get_option('header_only')
-    add_project_arguments('-DHWY_HEADER_ONLY')
+    add_project_arguments('-DHWY_HEADER_ONLY', language:'cpp')
 endif
-
 
 have_sys_auxv_h = cpp.has_header('sys/auxv.h')
 have_asm_hwcap_h = cpp.has_header('asm/hwcap.h')
@@ -814,4 +813,56 @@ if cmake_bin.found()
     cmake.write_basic_package_version_file(
         name:'hwy-config-version.cmake', compatibility:'SameMajorVersion', version:meson.project_version()
     )
+endif
+
+
+if get_option('report_targets')
+    hwy_targets = [
+        'HWY_AVX10_2',
+        'HWY_AVX3_SPR',
+        'HWY_AVX3_ZEN4',
+        'HWY_AVX3_DL',
+        'HWY_AVX3',
+        'HWY_AVX2',
+        'HWY_SSE4',
+        'HWY_SSSE3',
+        'HWY_SSE2',
+        'HWY_SVE2_128',
+        'HWY_SVE_256',
+        'HWY_SVE2',
+        'HWY_SVE',
+        'HWY_NEON_BF16',
+        'HWY_NEON',
+        'HWY_NEON_WITHOUT_AES',
+        'HWY_RVV',
+        'HWY_LASX',
+        'HWY_LSX',
+        'HWY_PPC10',
+        'HWY_PPC9',
+        'HWY_PPC8',
+        'HWY_Z15',
+        'HWY_Z14',
+        'HWY_WASM_EMU256',
+        'HWY_WASM',
+        'HWY_EMU128',
+        'HWY_SCALAR',
+    ]
+
+    hwy_enabled_targets = []
+    foreach target:hwy_targets
+        if cpp.compute_int(
+            '(' + target + ' & HWY_TARGETS) != 0',
+            include_directories:hwy_include_dir,
+            prefix:'#include "hwy/detect_targets.h"',
+            guess:0,
+            low:0,
+            high:1,
+        ) == 1
+            hwy_enabled_targets += hwy_targets
+        endif
+    endforeach
+
+    foreach target : hwy_enabled_targets
+        message(target + 'enabled')
+    endforeach
 endif

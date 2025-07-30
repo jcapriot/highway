@@ -31,7 +31,7 @@ jobs:
             c_compiler: cl
             cxx_compiler: cl
             extra_mesons_flags: -Dvsenv=true
-            cxx_flags: /DHWY_ATTAINABLE_TARGETS_X86=(HWY_AVX2|HWY_SSE4|HWY_SSE2|HWY_BASELINE_SCALAR)
+            cxx_flags: /DHWY_SLOW_MSVC
             cxx_standard: 17
 
             # LLVM is at 20.1.8 on current windows-2022 runner
@@ -39,13 +39,12 @@ jobs:
             c_compiler: clang-cl
             cxx_compiler: clang-cl
             extra_mesons_flags: -Dvsenv=true
-            cxx_flags: /DHWY_ATTAINABLE_TARGETS_X86=(HWY_AVX2|HWY_SSE4|HWY_SSE2|HWY_BASELINE_SCALAR)
+            cxx_flags: /DHWY_SLOW_MSVC
             cxx_standard: 17
 
           - name: LLVM
             c_compiler: clang
             cxx_compiler: clang++
-            cxx_flags: -DHWY_ATTAINABLE_TARGETS_X86=(HWY_AVX2|HWY_SSE4|HWY_SSE2|HWY_BASELINE_SCALAR)
             cxx_standard: 17
 
     steps:
@@ -63,7 +62,7 @@ jobs:
             meson wrap update gtest
 
       - name: Configure Build
-        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
+        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} -Dreport_targets=true ${{ matrix.extra_mesons_flags }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
@@ -122,7 +121,7 @@ jobs:
             export CC=${{ matrix.c_compiler }}
             export CXX=${{ matrix.cxx_compiler }}
             export CXXFLAGS=${{ matrix.cxx_flags }}
-            meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
+            meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} -Dreport_targets=true ${{ matrix.extra_mesons_flags }}
       
       - name: Build
         run: meson compile -C out -j 2 -v

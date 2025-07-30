@@ -120,7 +120,7 @@ jobs:
         run: sudo apt-get install ${{ matrix.extra_deps }}
 
       - name: Configure Build
-        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
+        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} -Dcompiled_target_info=true ${{ matrix.extra_mesons_flags }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
@@ -182,7 +182,7 @@ jobs:
           echo "endian = 'little'" >> x86_cross_file.txt
 
       - name: Configure Build
-        run: meson setup out --cross-file x86_cross_file.txt -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} -Dsse2=true
+        run: meson setup out --cross-file x86_cross_file.txt -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} -Dsse2=true -Dreport_targets=true
       
       - name: Build
         run: meson compile -C out -j 2 -v
@@ -267,7 +267,7 @@ jobs:
         run: sudo apt-get install ninja-build meson ${{ matrix.extra_deps }}
 
       - name: Configure Build
-        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }}
+        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} -Dreport_targets=true
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
