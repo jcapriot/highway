@@ -2,9 +2,6 @@ option('enable_contrib', type : 'boolean', value : true, description: 'Include c
 option('enable_examples', type : 'boolean', value : true, description: 'Build examples')
 option('enable_tests', type : 'boolean', value : true, description: 'Enable HWY tests')
 
-# This bit is a little slow (by comparison) disable by default
-option('report_targets', type : 'boolean', value: false, description: 'Report the compiled targets.')
-
 option('test_standalone', type : 'boolean', value : false, description: 'Disable use of googletest')
 
 option('disable_futex', type : 'boolean', value : false, description: 'Disable futex for thread_pool')
