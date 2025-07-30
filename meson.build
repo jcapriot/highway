@@ -45,9 +45,8 @@ pie = get_option('b_pie') and not is_windows
 static_pic = get_option('b_staticpic') and not is_windows
 
 
-atomic_dep = dependency('atomic', required:false)
-if not cpp.links(
-    '''
+atomic_dep = dependency('', required: false)
+atomic_code = '''
     #include <atomic>
     #include <cstdint>
     std::atomic<uint8_t> n8 (0); // riscv64
@@ -57,10 +56,12 @@ if not cpp.links(
         ++n64;
         return 0;
     }
-    ''',
-    dependencies:atomic_dep,
-) # this must compile regardless of atomic_dep being found or not
-    error('Unable to compile with atomic')
+    '''
+if not cpp.compiles(atomic_code)
+    atomic_dep = cpp.find_library('atomic', required: true)
+    if not cpp.compiles(atomic_code, dependencies: atomic_dep)
+        error('Unable to compile with atomic')
+    endif
 endif
 
 
