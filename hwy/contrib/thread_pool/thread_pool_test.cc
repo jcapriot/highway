@@ -431,7 +431,7 @@ TEST(ThreadPoolTest, TestWaitMode) {
   ThreadPool pool(9);
   RandomState rng;
   for (size_t i = 0; i < 100; ++i) {
-    pool.SetWaitMode(Random32(&rng) ? PoolWaitMode::kSpin
+    pool.SetWaitMode((Random32(&rng) & 1) ? PoolWaitMode::kSpin
                                     : PoolWaitMode::kBlock);
   }
 }
