@@ -125,12 +125,9 @@ jobs:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
           CXXFLAGS: ${{ matrix.cxx_flags }}
-      
-      - name: Build
-        run: meson compile -C out -j 2 -v
 
-      - name: Test
-        run: meson test -C out -j 2
+      - name: Build & Test
+        run: meson test -C out -j 2 -v
 
   meson_i686:
     name: Meson build and test ${{ matrix.name }}
@@ -183,12 +180,9 @@ jobs:
 
       - name: Configure Build
         run: meson setup out --cross-file x86_cross_file.txt -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} -Dsse2=true
-      
-      - name: Build
-        run: meson compile -C out -j 2 -v
 
-      - name: Test
-        run: meson test -C out -j 2
+      - name: Build & Test
+        run: meson test -C out -j 2 -v
 
   meson_ubuntu_2404:
     name: Meson build and test ${{ matrix.name }}
@@ -272,9 +266,6 @@ jobs:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
           CXXFLAGS: ${{ matrix.cxx_flags }}
-      
-      - name: Build
-        run: meson compile -C out -j 2 -v
 
-      - name: Test
-        run: meson test -C out -j 2
+      - name: Build & Test
+        run: meson test -C out -j 2 -v

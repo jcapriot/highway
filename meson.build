@@ -529,7 +529,7 @@ hwy_test_lib = library(
     pic: static_pic,
     version: meson.project_version(),
     link_depends: hwy_link_depends,
-    build_by_default: false,
+    build_by_default: not meson.is_subproject(),
     install: tests_enabled,
     gnu_symbol_visibility: 'inlineshidden',
 )
@@ -604,7 +604,7 @@ if tests_enabled
             ]
             # find gtest as a subproject (The wrap included here matches 1.12.1)
             # note that 1.12.1 was the last to support C++11.
-            gtest_proj = subproject('gtest', default_options:gtest_build_overrides)
+            gtest_proj = subproject('gtest', default_options:gtest_build_overrides + ['default_library=shared'])
             gtest_main_dep = gtest_proj.get_variable('gtest_main_dep')
             gtest_version = gtest_main_dep.version()
             if gtest_version.version_compare('<1.15.2')
