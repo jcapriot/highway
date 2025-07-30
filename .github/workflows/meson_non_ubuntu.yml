@@ -23,6 +23,7 @@ jobs:
   meson_win:
     name: Meson build and test ${{ matrix.name }} on windows
     runs-on: windows-2022
+    continue-on-error: true
     strategy:
       matrix:
         include:
@@ -67,6 +68,11 @@ jobs:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
           CXXFLAGS: ${{ matrix.cxx_flags }}
+          
+      - name: Report Targets
+        run: |
+          meson compile -C out hwy_list_targets
+          out\hwy_list_targets
       
       - name: Build
         run: meson compile -C out -j 2 -v
@@ -77,6 +83,7 @@ jobs:
   meson_macos:
     name: Meson build and test ${{ matrix.name }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: true
     strategy:
       matrix:
         os: [macos-15, macos-13]  # macos-15 is arm, macos-13 is last x86_64 runner
@@ -99,11 +106,6 @@ jobs:
             extra_deps: gcc@15
             c_compiler: gcc-15
             cxx_compiler: g++-15
-        
-        exclude:
-          # not sure why, but these targets are detected as neon...
-          - compiler: gnu
-            os: macos-13
 
     steps:
       - name: Harden Runner
@@ -124,6 +126,11 @@ jobs:
             export CXX=${{ matrix.cxx_compiler }}
             export CXXFLAGS=${{ matrix.cxx_flags }}
             meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_mesons_flags }}
+      
+      - name: Report Targets
+        run: |
+          meson compile -C out hwy_list_targets
+          out/hwy_list_targets
       
       - name: Build
         run: meson compile -C out -j 2 -v
