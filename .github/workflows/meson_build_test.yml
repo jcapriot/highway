@@ -120,7 +120,7 @@ jobs:
         run: sudo apt-get install ${{ matrix.extra_deps }}
 
       - name: Configure Build
-        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} -Dcompiled_target_info=true ${{ matrix.extra_mesons_flags }}
+        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} -Dreport_targets=true ${{ matrix.extra_mesons_flags }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
