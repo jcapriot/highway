@@ -44,6 +44,26 @@ is_windows = host_machine.system() == 'windows'
 pie = get_option('b_pie') and not is_windows
 static_pic = get_option('b_staticpic') and not is_windows
 
+
+atomic_dep = dependency('atomic', required:false)
+if not cpp.links(
+    '''
+    #include <atomic>
+    #include <cstdint>
+    std::atomic<uint8_t> n8 (0); // riscv64
+    std::atomic<uint64_t> n64 (0); // armel, mipsel, powerpc
+    int main() {
+        ++n8;
+        ++n64;
+        return 0;
+    }
+    ''',
+    dependencies:atomic_dep,
+) # this must compile regardless of atomic_dep being found or not
+    error('Unable to compile with atomic')
+endif
+
+
 riscv_xlen = 0
 if have_riscv or 'riscv' in host_machine.cpu_family()
     riscv_xlen = cpp.get_define('__riscv_xlen')
@@ -341,7 +361,7 @@ else
             riscv_arg = '-march=rv32gcv1p0'
         endif
 
-        if riscv_args != ''
+        if riscv_arg != ''
             add_project_arguments(riscv_arg, language: 'cpp')
             add_project_link_arguments(riscv_arg, language: 'cpp')
         endif
@@ -387,6 +407,7 @@ hwy_static_args = ['-DHWY_STATIC_DEFINE']
 hwy_lib = library(
     'hwy',
     hwy_sources,
+    dependencies: atomic_dep,
     cpp_args: toolchain_args,
     cpp_shared_args: hwy_shared_args,
     cpp_static_args: hwy_static_args,
@@ -406,6 +427,7 @@ endif
 hwy_dep = declare_dependency(
     compile_args: hwy_dep_args,
     include_directories: hwy_include_dir,
+    dependencies: atomic_dep,
     link_with: hwy_lib,
 )
 
@@ -418,69 +440,43 @@ pkg.generate(
     extra_cflags: hwy_dep_args,
 )
 
-atomic_dep = dependency('', required:false) # an empty dependency
-if contrib_enabled or examples_enabled
-  
-    atomic_code = '''
-        #include <atomic>
-        #include <cstdint>
-        std::atomic<uint8_t> n8 (0); // riscv64
-        std::atomic<uint64_t> n64 (0); // armel, mipsel, powerpc
-        int main() {
-            ++n8;
-            ++n64;
-            return 0;
-        }
-        '''
-    if not cpp.compiles(atomic_code)
-        atomic_dep = cpp.find_library('atomic', required:true)
-        cpp.links(atomic_code, dependencies:atomic_dep, required:true)
-    endif
-endif
-
-thread_dep = dependency('', required:false) # empty thread dependency
 if contrib_enabled
     # these dependencies look to be only required if enable_contrib
-    contrib_deps = [hwy_dep, atomic_dep]
+    contrib_deps = [hwy_dep]
 
+    #threading is only required if contrib is enabled
     thread_dep = dependency('threads')
     contrib_deps += thread_dep
 
     contrib_args = []
 
     disable_futex = get_option('disable_futex')
-    if is_windows and not is_msvc_syntax and not disable_futex
+    if is_windows
         synch_dep = cpp.find_library('synchronization', required:false)
-        if synch_dep.found()
-            # double check it can compile with synchronization
-            synch_compiles = cpp.compiles(
-                    '''
-                    #ifndef NOMINMAX
-                    #define NOMINMAX
-                    #endif
+        synch_run = cpp.run(
+                '''
+                #ifndef NOMINMAX
+                #define NOMINMAX
+                #endif
 
-                    #include <windows.h>
+                #include <windows.h>
 
-                    int main() {
-                        unsigned val1 = 0u;
-                        unsigned val2 = 1u;
-                        WaitOnAddress(&val1, &val2, sizeof(unsigned), 1);
-                        WakeByAddressAll(&val1);
-                        WakeByAddressSingle(&val1);
-                        return 0;
-                    }
-                    ''',
-                    dependencies: synch_dep
-            )
-            if synch_compiles
-                contrib_deps += synch_dep
-            else
-                # if it doesn't compile
-                disable_futex = true
-            endif
-        else
-            # if synch is not found
+                int main() {
+                    unsigned val1 = 0u;
+                    unsigned val2 = 1u;
+                    WaitOnAddress(&val1, &val2, sizeof(unsigned), 1);
+                    WakeByAddressAll(&val1);
+                    WakeByAddressSingle(&val1);
+                    return 0;
+                }
+                ''',
+                dependencies: synch_dep  # if synch_dep wasn't found, and this compiles anyway great!
+        )
+        if synch_run.returncode() != 0
             disable_futex = true
+            message('Disabled Futex')
+        else
+            contrib_deps += synch_dep
         endif
     endif
 
@@ -569,7 +565,7 @@ if examples_enabled
     executable(
         'hwy_benchmark',
         'hwy/examples/benchmark.cc',
-        dependencies: [hwy_dep, atomic_dep],
+        dependencies: hwy_dep,
         pie: pie,
     )
 
@@ -608,15 +604,16 @@ if tests_enabled
             gtest_main_dep = gtest_proj.get_variable('gtest_main_dep')
             gtest_version = gtest_main_dep.version()
             if gtest_version.version_compare('<1.15.2')
+
+                gtest_incdir = gtest_proj.get_variable('gtest_incdir')
+                gtest_libsources = gtest_proj.get_variable('gtest_libsources')
+                gtest_mainsources = gtest_proj.get_variable('gtest_mainsources')
                 
                 # this bit is awkward because the 1.12.1 wrap defines the dependency objects as files
                 # causing them to get recompiled with every test executable. The gtest wrap for version 1.15.2-2 was first to build
                 # gtest as a library, it's logic is mostly duplicated below.
 
-                #if this was still the empty dependency from before the contrib
-                if not thread_dep.found()
-                    thread_dep = dependency('threads')
-                endif
+                thread_dep = dependency('threads')
 
                 if is_windows
                     gtest_dllexp = '-DGTEST_CREATE_SHARED_LIBRARY=1'
@@ -625,10 +622,6 @@ if tests_enabled
                     gtest_dllexp = []
                     gtest_dllimp = []
                 endif
-
-                gtest_incdir = gtest_proj.get_variable('gtest_incdir')
-                gtest_libsources = gtest_proj.get_variable('gtest_libsources')
-                gtest_mainsources = gtest_proj.get_variable('gtest_mainsources')
 
                 # always build as a shared library (to avoid crt conflicts)
                 # (note that these are not installable from this project)
@@ -785,7 +778,7 @@ if tests_enabled
             'hwy/contrib/sort/sort_unit_test.cc',
             'hwy/contrib/thread_pool/spin_test.cc',
             'hwy/contrib/thread_pool/thread_pool_test.cc',
-            'hwy/contrib/thread_pool/topology_test.cc',  # note that this test fails on windows for some reason... (seems related to the ForEachSLPI function)
+            'hwy/contrib/thread_pool/topology_test.cc',
             'hwy/contrib/unroller/unroller_test.cc',
         )
 
