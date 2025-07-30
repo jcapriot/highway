@@ -33,6 +33,7 @@ jobs:
             cxx_compiler: cl
             extra_mesons_flags: -Dvsenv=true
             cxx_standard: 17
+            cxx_flags: /DHWY_SLOW_MSVC
 
             # LLVM is at 20.1.8 on current windows-2022 runner
           - name: LLVM-CL
