@@ -114,7 +114,9 @@ jobs:
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
       - name: Install deps
-        run: brew install meson googletest ${{ matrix.extra_deps }}
+        run: |
+            brew install meson ${{ matrix.extra_deps }}
+            meson wrap update gtest
 
       - name: Configure Build
         run: |
