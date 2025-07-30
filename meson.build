@@ -858,7 +858,7 @@ if get_option('report_targets')
             low:0,
             high:1,
         ) == 1
-            hwy_enabled_targets += hwy_targets
+            hwy_enabled_targets += target
         endif
     endforeach
 
