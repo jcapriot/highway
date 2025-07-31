@@ -130,7 +130,7 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out -j 2 -v
+        run: meson test -C out -j 2 --print-errorlogs
 
   meson_i686:
     name: Meson build and test ${{ matrix.name }}
@@ -188,7 +188,7 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out -j 2 -v
+        run: meson test -C out -j 2 --print-errorlogs
 
   meson_ubuntu_2404:
     name: Meson build and test ${{ matrix.name }}
@@ -277,4 +277,4 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out -j 2 -v
+        run: meson test -C out -j 2 --print-errorlogs

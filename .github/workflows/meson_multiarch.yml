@@ -44,7 +44,7 @@ jobs:
         run: |
           CXXFLAGS=${{ matrix.cxx_flags }} meson setup out -Dwerror=true ${{ matrix.meson_flags }}
           meson compile -C out -j 2 -v
-          meson test -C out -j 2 -v
+          meson test -C out -j 2 --print-errorlogs
 
   aarch64_cmake:
     name: Build and test ${{ matrix.name }} on AArch64
@@ -87,7 +87,7 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out -j 2 -v
+        run: meson test -C out -j 2 --print-errorlogs
 
   loongarch64_cmake:
     name: Build and test ${{ matrix.name }} on LoongArch64
@@ -147,4 +147,4 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out -j 2 -v --timeout-multiplier=5
+        run: meson test -C out -j 2 --print-errorlogs --timeout-multiplier=5

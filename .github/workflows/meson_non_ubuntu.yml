@@ -26,28 +26,33 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        os: [windows-2022, windows-11-arm]
-        name: ['MSVC', 'LLVM-CL']
         include:
-            # These are all preconfigured on the windows runner at the moment
           - name: MSVC
+            os: windows-2022
             c_compiler: cl
             cxx_compiler: cl
             extra_meson_flags: -Dvsenv=true -Dcontrib=disabled  # MSCV usually chokes on compiling vqsort on CI
             cxx_standard: 17
             cxx_flags: /DHWY_SLOW_MSVC
+          
+          # windows-11-arm msvc only detects emu128 as a target
 
             # LLVM is at 20.1.8 on current windows-2022 runner
           - name: LLVM-CL
+            os: windows-2022
             c_compiler: clang-cl
             cxx_compiler: clang-cl
             extra_meson_flags: -Dvsenv=true
             cxx_flags: /DHWY_DISABLED_TARGETS=0x58
             cxx_standard: 17
-
+          
           - name: LLVM-CL
-            os: windows-2022
-            extra_meson_flags: -Dvsenv=true -Ddisable_futex=true
+            os: windows-11-arm
+            c_compiler: clang-cl
+            cxx_compiler: clang-cl
+            extra_meson_flags: -Dvsenv=true
+            cxx_flags: /DHWY_DISABLED_TARGETS=0x58
+            cxx_standard: 17
 
     steps:
       - name: Harden Runner
@@ -79,7 +84,7 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out -j 2 -v
+        run: meson test -C out -j 2 --print-errorlogs
 
   meson_macos:
     name: Meson build and test ${{ matrix.name }} on ${{ matrix.os }}
@@ -143,4 +148,4 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out -j 2 -v
+        run: meson test -C out -j 2 --print-errorlogs
