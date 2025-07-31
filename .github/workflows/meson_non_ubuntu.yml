@@ -33,7 +33,7 @@ jobs:
           - name: MSVC
             c_compiler: cl
             cxx_compiler: cl
-            extra_meson_flags: -Dvsenv=true
+            extra_meson_flags: -Dvsenv=true -Dcontrib=disabled  # MSCV usually chokes on compiling vqsort on CI
             cxx_standard: 17
             cxx_flags: /DHWY_SLOW_MSVC
 
@@ -44,6 +44,10 @@ jobs:
             extra_meson_flags: -Dvsenv=true
             cxx_flags: /DHWY_DISABLED_TARGETS=0x58
             cxx_standard: 17
+
+          - name: LLVM-CL
+            os: windows-2022
+            extra_meson_flags: -Dvsenv=true -Ddisable_futex=true
 
     steps:
       - name: Harden Runner
