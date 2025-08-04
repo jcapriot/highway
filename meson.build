@@ -200,8 +200,6 @@ if is_msvc_syntax
     add_project_arguments(
         '/bigobj',
 
-        # '/GR-',  # handled by cpp_rtti=false default option
-        # '/EHs-c-',  # handled by cpp_eh=none default option
         # Disable exceptions in STL code.
         '-D_HAS_EXCEPTIONS=0',
         language:'cpp'
@@ -219,78 +217,26 @@ if is_msvc_syntax
             language: 'cpp',
         )
     endif
-
-    if cpp.get_id() == 'clang-cl'
-        add_project_arguments(
-            '-Wconversion',
-            '-Wsign-conversion',
-            '-Wvla',
-            '-Wnon-virtual-dtor',
-
-            '-Wfloat-overflow-conversion',
-            '-Wfloat-zero-conversion',
-            '-Wfor-loop-analysis',
-            '-Wgnu-redeclared-enum',
-            '-Winfinite-recursion',
-            '-Wself-assign',
-            '-Wstring-conversion',
-            '-Wtautological-overlap-compare',
-            '-Wthread-safety-analysis',
-            '-Wundefined-func-template',
-            language:'cpp'
-        )
-    endif
 else
     add_project_arguments(
         # Avoid changing binaries based on the current time and date.
-        '-Wno-builtin-macro-redefined',
         '-D__DATE__="redacted"',
         '-D__TIMESTAMP__="redacted"',
         '-D__TIME__="redacted"',
 
         # Optimizations
         '-fmerge-all-constants',
-    
-        # Warnings
-        # '-Wall', handled by warning_level
-        # '-Wextra', handled by warning_level
-        # These are not included in Wall nor Wextra:
-        '-Wconversion',
-        '-Wsign-conversion',
-        '-Wvla',
-        '-Wnon-virtual-dtor',
-        '-Wcast-align', # see -Wcast-align=strict on x86
+
         language:'cpp'
     )
 
     if cpp.get_id() == 'clang'
         add_project_arguments(
-            '-Wfloat-overflow-conversion',
-            '-Wfloat-zero-conversion',
-            '-Wfor-loop-analysis',
-            '-Wgnu-redeclared-enum',
-            '-Winfinite-recursion',
-            '-Wself-assign',
-            '-Wstring-conversion',
-            '-Wtautological-overlap-compare',
-            '-Wthread-safety-analysis',
-            '-Wundefined-func-template',
-
             # '-fno-cxx-exceptions' # handled by default build option cpp_eh=none
             '-fno-slp-vectorize',
             '-fno-vectorize',
-
-            # Use color in messages
-            '-fdiagnostics-show-option',
-            '-fcolor-diagnostics',
             language:'cpp'
         )
-        if cpp.version().version_compare('>=6.0')
-            add_project_arguments(
-                '-Wc++2a-extensions',
-                language:'cpp'
-            )
-        endif
     endif
     if is_windows
         if cpp.get_id() == 'clang'
