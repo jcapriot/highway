@@ -18,6 +18,8 @@ on: [push, pull_request]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+env:
+  meson_setup_args: -dwerror=true
 
 jobs:
   meson_win:
@@ -69,7 +71,7 @@ jobs:
             meson wrap update gtest
 
       - name: Configure Build
-        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_meson_flags }}
+        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
@@ -137,7 +139,7 @@ jobs:
             export CC=${{ matrix.c_compiler }}
             export CXX=${{ matrix.cxx_compiler }}
             export CXXFLAGS=${{ matrix.cxx_flags }}
-            meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_meson_flags }}
+            meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
       
       - name: Report Targets
         run: |

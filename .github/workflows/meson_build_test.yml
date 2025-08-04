@@ -18,6 +18,8 @@ on: [push, pull_request]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+env:
+  meson_setup_args: 
 
 jobs:
   meson:
@@ -120,7 +122,7 @@ jobs:
         run: sudo apt-get install ${{ matrix.extra_deps }}
 
       - name: Configure Build
-        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{ matrix.extra_meson_flags }}
+        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
@@ -145,6 +147,7 @@ jobs:
             # Disable AVX3 targets on x86_32
             cxx_flags: -m32 -DHWY_DISABLED_TARGETS=0x1FF -DHWY_BROKEN_TARGETS=0x1FF
             cxx_standard: 17
+            extra_meson_flags: -Dsse2=true
 
           - name: GCC-12 (x86_32)
             extra_deps: g++-12-i686-linux-gnu
@@ -153,6 +156,7 @@ jobs:
             # Disable AVX3 targets on x86_32
             cxx_flags: -m32 -ftrapv -DHWY_DISABLED_TARGETS=0x1FF -DHWY_BROKEN_TARGETS=0x1FF
             cxx_standard: 17
+            extra_meson_flags: -Dsse2=true
 
     steps:
       - name: Harden Runner
@@ -182,7 +186,7 @@ jobs:
           echo "endian = 'little'" >> x86_cross_file.txt
 
       - name: Configure Build
-        run: meson setup out --cross-file x86_cross_file.txt -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} -Dsse2=true
+        run: meson setup out --cross-file x86_cross_file.txt -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
 
       - name: Build
         run: meson compile -C out -j 2 -v
@@ -267,7 +271,7 @@ jobs:
         run: sudo apt-get install ninja-build meson ${{ matrix.extra_deps }}
 
       - name: Configure Build
-        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }}
+        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}

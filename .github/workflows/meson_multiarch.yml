@@ -9,6 +9,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  meson_setup_args: -dwerror=true
+
 jobs:
   multiarch:
     runs-on: ubuntu-22.04
@@ -77,7 +80,7 @@ jobs:
         run: sudo apt-get install ninja-build meson ${{ matrix.extra_deps }}
 
       - name: Configure Build
-        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }}
+        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
@@ -141,7 +144,7 @@ jobs:
           echo "endian = 'little'" >> la64_cross_file.txt
 
       - name: Configure Build
-        run: meson setup out --cross-file la64_cross_file.txt -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }}
+        run: meson setup out --cross-file la64_cross_file.txt -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
 
       - name: Build
         run: meson compile -C out -j 2 -v
