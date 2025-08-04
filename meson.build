@@ -23,6 +23,9 @@ is_subproj = meson.is_subproject()
 tests_enabled = get_option('tests').disable_auto_if(is_subproj).allowed()
 examples_enabled = get_option('examples').disable_auto_if(is_subproj).allowed()
 
+hwy_nowarn_args = []
+hwy_cpp_args = []
+hwy_link_args = []
 
 cpp = meson.get_compiler('cpp')
 
@@ -35,10 +38,10 @@ support_lsx_flag = false
 support_lasx_flag = false
 if 'loongarch' in host_machine.cpu_family()
     if get_option('lsx') and cpp.has_define('__loongarch_sx', args: '-mlsx')
-        add_project_arguments('-mlsx', language:'cpp')
+        hwy_cpp_args += '-mlsx'
     endif
     if get_option('lasx') and cpp.has_define('__loongarch_asx', args: '-mlasx')
-        add_project_arguments('-mlasx', language:'cpp')
+        hwy_cpp_args +='-mlasx'
     endif
 endif
 
@@ -194,18 +197,15 @@ hwy_test_sources = files(
     'hwy/tests/test_util.cc'
 )
 
-cpp_link_args = []
 is_msvc_syntax = cpp.get_argument_syntax() == 'msvc'
 if is_msvc_syntax
-    add_project_arguments(
+    hwy_cpp_args += [
         '/bigobj',
-
         # Disable exceptions in STL code.
-        '-D_HAS_EXCEPTIONS=0',
-        language:'cpp'
-    )
-    if get_option('warning_level') == '4'
-        add_project_arguments(
+        '-D_HAS_EXCEPTIONS=0'
+    ]
+    if get_option('warning_level') == '3'  # enables /W4
+        hwy_nowarn_args += [
             # Disable some W4 warnings.  Enable them individually after they are cleaned up.
             '/wd4100',
             '/wd4127',
@@ -214,11 +214,10 @@ if is_msvc_syntax
             '/wd4701',
             '/wd4702',
             '/wd4723',
-            language: 'cpp',
-        )
+        ]
     endif
 else
-    add_project_arguments(
+    hwy_cpp_args += [
         # Avoid changing binaries based on the current time and date.
         '-D__DATE__="redacted"',
         '-D__TIMESTAMP__="redacted"',
@@ -226,21 +225,17 @@ else
 
         # Optimizations
         '-fmerge-all-constants',
-
-        language:'cpp'
-    )
+    ]
 
     if cpp.get_id() == 'clang'
-        add_project_arguments(
-            # '-fno-cxx-exceptions' # handled by default build option cpp_eh=none
+        hwy_cpp_args += [
             '-fno-slp-vectorize',
             '-fno-vectorize',
-            language:'cpp'
-        )
+        ]
     endif
     if is_windows
         if cpp.get_id() == 'clang'
-            add_project_arguments(
+            hwy_nowarn_args += [
                 '-Wno-global-constructors',
                 '-Wno-language-extension-token',
                 '-Wno-used-but-marked-unused',
@@ -250,56 +245,41 @@ else
                 '-Wno-c++98-compat-pedantic',
                 '-Wno-used-but-marked-unused',
                 '-Wno-zero-as-null-pointer-constant',
-                language:'cpp',
-            )
+            ]
         endif
-        add_project_arguments(
+        hwy_nowarn_args += [
             '-Wno-cast-align',
             '-Wno-double-promotion',
             '-Wno-float-equal',
             '-Wno-format-nonliteral',
             '-Wno-shadow',
             '-Wno-sign-conversion',
-            language:'cpp',
-        )
+        ]
     else
-
-        add_project_arguments(
-            '-fmath-errno',
-            # '-fno-exceptions', # handled by cpp_eh=none default option
-            language:'cpp'
-        )
+        hwy_cpp_args += '-fmath-errno'
     endif
 
     if get_option('sse2')
-        add_project_arguments(
+        hwy_cpp_args += [
             '-msse2',
             '-mfpmath=sse',
-            language:'cpp',
-        )
+        ]
     endif
 
     if cpp.get_id() == 'gcc' or (cpp.get_id() == 'clang' and cpp.version().version_compare('>=11.0'))
-        add_project_arguments(
-            '-Wno-psabi',
-            language: 'cpp',
-        )
+        hwy_nowarn_args += '-Wno-psabi'
     endif
 
     if get_option('arm7')
-        add_project_arguments(
+        hwy_cpp_args += [
             '-march=armv7-a',
             '-mfpu=neon-vfpv4',
             '-mfloat-abi=hard',
             '-DHWY_HAVE_SCALAR_F16_TYPE=0',  # See #2625
             '-DHWY_NEON_HAVE_F16C=0',
-            language: 'cpp',
-        )
+        ]
         if cpp.get_id() == 'gcc'
-            add_project_arguments(
-                '-mfp16-format=ieee',
-                language: 'cpp',
-            )
+            hwy_cpp_args += '-mfp16-format=ieee'
         endif
     endif
 
@@ -312,35 +292,40 @@ else
         endif
 
         if riscv_arg != ''
-            add_project_arguments(riscv_arg, language: 'cpp')
-            add_project_link_arguments(riscv_arg, language: 'cpp')
+            hwy_cpp_args += riscv_arg
+            hwy_link_args += riscv_arg
         endif
 
         if cpp.get_id() == 'clang'
-            add_project_arguments('-menable-experimental-extensions', language: 'cpp')
+            hwy_cpp_args += '-menable-experimental-extensions'
         endif
     endif
 
     if have_emscripten
-        add_project_arguments('-matomics', language:'cpp')
+        hwy_cpp_args += '-matomics'
     endif
 
 endif
 
 hwy_hdr_only = get_option('header_only')
 if hwy_hdr_only
-    add_project_arguments('-DHWY_HEADER_ONLY', language:'cpp')
+    hwy_cpp_args += '-DHWY_HEADER_ONLY'
 endif
 
 have_sys_auxv_h = cpp.has_header('sys/auxv.h')
 have_asm_hwcap_h = cpp.has_header('asm/hwcap.h')
 toolchain_args = []
 if not have_sys_auxv_h
-    toolchain_args += '-DTOOLCHAIN_MISS_SYS_AUXV_H'
+    hwy_cpp_args += '-DTOOLCHAIN_MISS_SYS_AUXV_H'
 endif
 if  not have_asm_hwcap_h
-    toolchain_args += '-DTOOLCHAIN_MISS_ASM_HWCAP_H'
+    hwy_cpp_args += '-DTOOLCHAIN_MISS_ASM_HWCAP_H'
 endif
+
+
+add_project_arguments(hwy_cpp_args, language: 'cpp')
+add_project_arguments(hwy_nowarn_args, language: 'cpp')
+add_project_link_arguments(hwy_link_args, language: 'cpp')
 
 hwy_include_dir = include_directories('.')
 
@@ -352,7 +337,8 @@ if lib_link_args.length() > 0
     hwy_link_depends += files(hwy_version_file)
 endif
 
-hwy_shared_args = ['-DHWY_SHARED_DEFINE', '-Dhwy_EXPORTS']
+hwy_shared_import_args = ['-DHWY_SHARED_DEFINE']
+hwy_shared_export_args = hwy_shared_import_args + ['-Dhwy_EXPORTS']
 hwy_static_args = ['-DHWY_STATIC_DEFINE']
 
 hwy_lib = library(
@@ -360,7 +346,7 @@ hwy_lib = library(
     hwy_sources,
     dependencies: atomic_dep,
     cpp_args: toolchain_args,
-    cpp_shared_args: hwy_shared_args,
+    cpp_shared_args: hwy_shared_export_args,
     cpp_static_args: hwy_static_args,
     link_args: lib_link_args,
     install: true,
@@ -441,7 +427,7 @@ if contrib_enabled
         hwy_contrib_sources,
         dependencies: contrib_deps,
         cpp_args: contrib_args,
-        cpp_shared_args: hwy_shared_args,
+        cpp_shared_args: hwy_shared_export_args,
         cpp_static_args: hwy_static_args,
         link_args: lib_link_args,
         build_by_default: false, # only built if requested...
@@ -470,7 +456,7 @@ endif
 hwy_test_lib = library(
     'hwy_test',
     hwy_test_sources,
-    cpp_shared_args: hwy_shared_args,
+    cpp_shared_args: hwy_shared_export_args,
     cpp_static_args: hwy_static_args,
     link_args: lib_link_args,
     dependencies: hwy_dep,
