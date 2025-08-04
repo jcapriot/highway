@@ -45,7 +45,7 @@ jobs:
                 meson \
                 ;
         run: |
-          CXXFLAGS=${{ matrix.cxx_flags }} meson setup out -Dwerror=true ${{ matrix.meson_flags }}
+          CXXFLAGS=${{ matrix.cxx_flags }} meson setup out ${{env.meson_setup_args}} ${{ matrix.meson_flags }}
           meson compile -C out -j 2 -v
           meson test -C out -j 2 --print-errorlogs
 
@@ -114,7 +114,7 @@ jobs:
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
       - name: Install build requirements
-        run: sudo apt-get install ninja-build meson libgtest-dev
+        run: sudo apt-get install ninja-build meson
 
       - name: Install deps
         run: |

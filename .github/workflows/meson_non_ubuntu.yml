@@ -68,7 +68,6 @@ jobs:
       - name: Install deps
         run: |
             pipx install meson
-            meson wrap update gtest
 
       - name: Configure Build
         run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
@@ -132,7 +131,6 @@ jobs:
       - name: Install deps
         run: |
             brew install meson ${{ matrix.extra_deps }}
-            meson wrap update gtest
 
       - name: Configure Build
         run: |
