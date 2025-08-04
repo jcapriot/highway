@@ -217,12 +217,16 @@ if is_msvc_syntax
         ]
     endif
 else
-    hwy_cpp_args += [
-        # Avoid changing binaries based on the current time and date.
+    add_project_arguments(
+        # Avoid changing these binaries based on the current time and date.
+        '-Wno-builtin-macro-redefined',
         '-D__DATE__="redacted"',
         '-D__TIMESTAMP__="redacted"',
         '-D__TIME__="redacted"',
+        language: 'cpp'
+    )
 
+    hwy_cpp_args += [
         # Optimizations
         '-fmerge-all-constants',
     ]
