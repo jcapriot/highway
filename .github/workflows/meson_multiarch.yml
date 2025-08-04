@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  meson_setup_args: -dwerror=true
+  meson_setup_args: -Dwerror=true
 
 jobs:
   multiarch:
