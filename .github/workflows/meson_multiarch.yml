@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  meson_setup_args: -Dwerror=true -Dwarning_level=2
+  meson_setup_args: -Dwerror=true -Dwarning_level=2 -Dbuildtype=debugoptimized
 
 jobs:
   multiarch:

@@ -8,7 +8,6 @@ project(
     'cpp_std=c++17,c++14,c++11',
     'b_pie=true',
     'b_staticpic=true',
-    'buildtype=debugoptimized',
     'default_library=static',
     'cpp_eh=none',
     'cpp_rtti=false',
