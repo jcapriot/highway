@@ -119,7 +119,7 @@ jobs:
         run: pipx install meson
 
       - name: Install deps
-        run: sudo apt-get install ${{ matrix.extra_deps }}
+        run: sudo apt-get install libgtest-dev ${{ matrix.extra_deps }}
 
       - name: Configure Build
         run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
@@ -170,7 +170,7 @@ jobs:
         run: pipx install meson
 
       - name: Install deps
-        run: sudo apt-get install ${{ matrix.extra_deps }}
+        run: sudo apt-get install libgtest-dev ${{ matrix.extra_deps }}
 
       - name: Create cross file
         run: |
@@ -268,7 +268,7 @@ jobs:
 
         # meson on noble is at 1.3.2
       - name: Install deps
-        run: sudo apt-get install ninja-build meson ${{ matrix.extra_deps }}
+        run: sudo apt-get install ninja-build meson libgtest-dev ${{ matrix.extra_deps }}
 
       - name: Configure Build
         run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}

@@ -77,7 +77,7 @@ jobs:
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
       - name: Install deps
-        run: sudo apt-get install ninja-build meson ${{ matrix.extra_deps }}
+        run: sudo apt-get install ninja-build meson libgtest-dev ${{ matrix.extra_deps }}
 
       - name: Configure Build
         run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
@@ -114,7 +114,7 @@ jobs:
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
 
       - name: Install build requirements
-        run: sudo apt-get install ninja-build meson
+        run: sudo apt-get install ninja-build meson libgtest-dev
 
       - name: Install deps
         run: |
