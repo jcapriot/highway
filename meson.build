@@ -490,13 +490,14 @@ else
         main:true,
         version:gtest_req_ver,
         fallback: ['gtest', 'gtest_main_dep'],
+        required: tests_enabled
     )
 endif
 
 if gtest_main_dep.found()
     hwy_test_args = '-DHWY_TEST_STANDALONE=0'
 else
-    hwy_test_args = '-DHWY_TEST_STANDALONE=0'
+    hwy_test_args = '-DHWY_TEST_STANDALONE=1'
 endif
 
 hwy_test_dep = declare_dependency(
