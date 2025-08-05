@@ -543,18 +543,18 @@ if examples_enabled
 endif
 
 if tests_enabled
-    
+
     fs = import('fs')
 
-    if get_option('test_standalone')
-        gtest_main_dep = dependency('', required: false)
-    else
+    if gtest_dep.found()
         gtest_main_dep = dependency(
             'gtest',
             main:true,
             version:gtest_req_ver,
             fallback: ['gtest', 'gtest_main_dep'],
         )
+    else
+        gtest_main_dep = dependency('', required: false)
     endif
 
     hwy_test_files = files(
