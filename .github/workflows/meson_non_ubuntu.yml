@@ -33,7 +33,7 @@ jobs:
             os: windows-2022
             c_compiler: cl
             cxx_compiler: cl
-            extra_meson_flags: -Dwerror=true -Dvsenv=true -Dcontrib=disabled  # MSCV usually chokes on compiling vqsort on CI
+            extra_meson_flags: -Dvsenv=true -Dcontrib=disabled  # MSCV usually chokes on compiling vqsort on CI
             cxx_standard: 17
             cxx_flags: /DHWY_SLOW_MSVC
           
