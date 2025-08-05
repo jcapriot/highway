@@ -473,23 +473,25 @@ hwy_test_lib = library(
     gnu_symbol_visibility: 'inlineshidden',
 )
 
-
-cpp_std = get_option('cpp_std')
-if '11' in cpp_std
-    gtest_req_ver = '<=1.12.1'
-elif '14' in cpp_std
-    gtest_req_ver = '<=1.16.0'
+if get_option('test_standalone')
+    gtest_main_dep = dependency('', required: false)
 else
-    gtest_req_ver = []
-endif
+    cpp_std = get_option('cpp_std')
+    if '11' in cpp_std
+        gtest_req_ver = '<=1.12.1'
+    elif '14' in cpp_std
+        gtest_req_ver = '<=1.16.0'
+    else
+        gtest_req_ver = []
+    endif
 
-gtest_main_dep = dependency(
-    'gtest',
-    main:true,
-    version:gtest_req_ver,
-    fallback: ['gtest', 'gtest_main_dep'],
-    required: false
-)
+    gtest_main_dep = dependency(
+        'gtest',
+        main:true,
+        version:gtest_req_ver,
+        fallback: ['gtest', 'gtest_main_dep'],
+    )
+endif
 
 if gtest_main_dep.found()
     hwy_test_args = '-DHWY_TEST_STANDALONE=0'
