@@ -170,7 +170,7 @@ jobs:
         run: pipx install meson
 
       - name: Install deps
-        run: sudo apt-get install libgtest-dev ${{ matrix.extra_deps }}
+        run: sudo apt-get install ${{ matrix.extra_deps }}
 
       - name: Create cross file
         run: |
