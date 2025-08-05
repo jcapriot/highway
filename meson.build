@@ -474,7 +474,7 @@ hwy_test_lib = library(
 )
 
 if get_option('test_standalone')
-    gtest_main_dep = dependency('', required: false)
+    gtest_dep = dependency('', required: false)
 else
     cpp_std = get_option('cpp_std')
     if '11' in cpp_std
@@ -485,16 +485,14 @@ else
         gtest_req_ver = []
     endif
 
-    gtest_main_dep = dependency(
+    gtest_dep = dependency(
         'gtest',
-        main:true,
         version:gtest_req_ver,
-        fallback: ['gtest', 'gtest_main_dep'],
-        required: tests_enabled
+        fallback: ['gtest', 'gtest_dep'],
     )
 endif
 
-if gtest_main_dep.found()
+if gtest_dep.found()
     hwy_test_args = '-DHWY_TEST_STANDALONE=0'
 else
     hwy_test_args = '-DHWY_TEST_STANDALONE=1'
@@ -503,7 +501,7 @@ endif
 hwy_test_dep = declare_dependency(
     link_with: hwy_test_lib,
     compile_args: hwy_test_args,
-    dependencies: [hwy_dep, gtest_main_dep],
+    dependencies: [hwy_dep, gtest_dep],
 )
 
 hwy_list_targets = executable(
@@ -547,6 +545,17 @@ endif
 if tests_enabled
     
     fs = import('fs')
+
+    if get_option('test_standalone')
+        gtest_main_dep = dependency('', required: false)
+    else
+        gtest_main_dep = dependency(
+            'gtest',
+            main:true,
+            version:gtest_req_ver,
+            fallback: ['gtest', 'gtest_main_dep'],
+        )
+    endif
 
     hwy_test_files = files(
         'hwy/abort_test.cc',
@@ -637,7 +646,7 @@ if tests_enabled
             exe_name,
             test_srcs,
             cpp_args: test_exe_args,
-            dependencies: hwy_test_dep,
+            dependencies: [hwy_test_dep, gtest_main_dep],
             link_args: test_exe_link_args,
             pie: pie,
         )
@@ -675,7 +684,7 @@ if tests_enabled
                 exe_name,
                 test_src,
                 cpp_args: test_exe_args,
-                dependencies: [hwy_test_dep, hwy_contrib_dep],
+                dependencies: [hwy_test_dep, gtest_main_dep, hwy_contrib_dep],
                 link_args: test_exe_link_args,
                 pie: pie,
             )
