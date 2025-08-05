@@ -457,6 +457,7 @@ if contrib_enabled
     install_headers(hwy_contrib_headers, preserve_path:true)
 endif
 
+
 hwy_test_lib = library(
     'hwy_test',
     hwy_test_sources,
@@ -472,17 +473,34 @@ hwy_test_lib = library(
     gnu_symbol_visibility: 'inlineshidden',
 )
 
-hwy_test_args = []
-if get_option('test_standalone')
-    hwy_test_args += '-DHWY_TEST_STANDALONE=1'
+
+cpp_std = get_option('cpp_std')
+if '11' in cpp_std
+    gtest_req_ver = '<=1.12.1'
+elif '14' in cpp_std
+    gtest_req_ver = '<=1.16.0'
 else
-    hwy_test_args += '-DHWY_TEST_STANDALONE=0'
+    gtest_req_ver = []
+endif
+
+gtest_main_dep = dependency(
+    'gtest',
+    main:true,
+    version:gtest_req_ver,
+    fallback: ['gtest', 'gtest_main_dep'],
+    required: false
+)
+
+if gtest_main_dep.found()
+    hwy_test_args = '-DHWY_TEST_STANDALONE=0'
+else
+    hwy_test_args = '-DHWY_TEST_STANDALONE=0'
 endif
 
 hwy_test_dep = declare_dependency(
     link_with: hwy_test_lib,
     compile_args: hwy_test_args,
-    dependencies: hwy_dep,
+    dependencies: [hwy_dep, gtest_main_dep],
 )
 
 hwy_list_targets = executable(
@@ -526,84 +544,6 @@ endif
 if tests_enabled
     
     fs = import('fs')
-
-    if get_option('test_standalone')
-        gtest_main_dep = dependency('', required:false) # empty dependency
-    else
-        # defaults to system gtest with a custom fallback to a local gtest subproject
-        gtest_main_dep = dependency(
-            'gtest',
-            main:true,
-            required:false,
-        )
-        if not gtest_main_dep.found()
-            gtest_build_overrides = [
-                'cpp_eh=default',  # do not disable cpp exceptions for gtest
-                'werror=false',  # do not error on warnings building gtest
-            ]
-            # find gtest as a subproject (The wrap included here matches 1.12.1)
-            # note that 1.12.1 was the last to support C++11.
-            gtest_proj = subproject('gtest', default_options:gtest_build_overrides + ['default_library=shared'])
-            gtest_main_dep = gtest_proj.get_variable('gtest_main_dep')
-            gtest_version = gtest_main_dep.version()
-            if gtest_version.version_compare('<1.15.2')
-
-                gtest_incdir = gtest_proj.get_variable('gtest_incdir')
-                gtest_libsources = gtest_proj.get_variable('gtest_libsources')
-                gtest_mainsources = gtest_proj.get_variable('gtest_mainsources')
-                
-                # this bit is awkward because the 1.12.1 wrap defines the dependency objects as files
-                # causing them to get recompiled with every test executable. The gtest wrap for version 1.15.2-2 was first to build
-                # gtest as a library, it's logic is mostly duplicated below.
-
-                thread_dep = dependency('threads')
-
-                if is_windows
-                    gtest_dllexp = '-DGTEST_CREATE_SHARED_LIBRARY=1'
-                    gtest_dllimp = '-DGTEST_LINKED_AS_SHARED_LIBRARY=1'
-                else
-                    gtest_dllexp = []
-                    gtest_dllimp = []
-                endif
-
-                # always build as a shared library (to avoid crt conflicts)
-                # (note that these are not installable from this project)
-                gtest_lib = shared_library(
-                    'gtest-all',
-                    gtest_libsources,
-                    gnu_symbol_visibility: 'hidden',
-                    override_options:gtest_build_overrides,
-                    cpp_args: gtest_dllexp,
-                    dependencies: thread_dep,
-                    include_directories: gtest_incdir,
-                )
-
-                gtest_main_lib = shared_library(
-                    'gtest_main',
-                    gtest_mainsources,
-                    gnu_symbol_visibility: 'hidden',
-                    override_options:gtest_build_overrides,
-                    cpp_args: gtest_dllexp,
-                    include_directories: gtest_incdir,
-                    link_with: gtest_lib,
-                )
-
-                gtest_dep = declare_dependency(
-                    compile_args: gtest_dllimp,
-                    include_directories: gtest_incdir,
-                    link_with: gtest_lib,
-                    dependencies: thread_dep,
-                    version: gtest_version,
-                )
-
-                gtest_main_dep = declare_dependency(
-                    link_with: gtest_main_lib,
-                    dependencies: gtest_dep,
-                    version: gtest_version,
-                )
-            endif
-        endif
-    endif
 
     hwy_test_files = files(
         'hwy/abort_test.cc',
@@ -694,7 +634,7 @@ if tests_enabled
             exe_name,
             test_srcs,
             cpp_args: test_exe_args,
-            dependencies: [hwy_test_dep, gtest_main_dep],
+            dependencies: hwy_test_dep,
             link_args: test_exe_link_args,
             pie: pie,
         )
@@ -732,7 +672,7 @@ if tests_enabled
                 exe_name,
                 test_src,
                 cpp_args: test_exe_args,
-                dependencies: [hwy_test_dep, hwy_contrib_dep, gtest_main_dep],
+                dependencies: [hwy_test_dep, hwy_contrib_dep],
                 link_args: test_exe_link_args,
                 pie: pie,
             )
