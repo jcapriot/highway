@@ -681,12 +681,3 @@ if tests_enabled
         endforeach
     endif
 endif
-
-# if cmake
-cmake_bin = find_program('cmake', required: false)
-if cmake_bin.found()
-    cmake = import('cmake')
-    cmake.write_basic_package_version_file(
-        name:'hwy-config-version.cmake', compatibility:'SameMajorVersion', version:meson.project_version()
-    )
-endif
