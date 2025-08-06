@@ -34,8 +34,6 @@ pkg = import('pkgconfig')
 have_emscripten = cpp.has_define('__EMSCRIPTEN__')
 have_riscv = cpp.has_define('__riscv')
 
-support_lsx_flag = false
-support_lasx_flag = false
 if 'loongarch' in host_machine.cpu_family()
     if get_option('lsx') and cpp.has_define('__loongarch_sx', args: '-mlsx')
         hwy_cpp_args += '-mlsx'
@@ -71,7 +69,7 @@ if not cpp.compiles(atomic_code)
 endif
 
 
-riscv_xlen = 0
+riscv_xlen = ''
 if have_riscv or 'riscv' in host_machine.cpu_family()
     riscv_xlen = cpp.get_define('__riscv_xlen')
     if riscv_xlen == ''
