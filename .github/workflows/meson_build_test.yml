@@ -179,7 +179,6 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        cxx_standard: [17]
         include:
 
           - os: macos-15
