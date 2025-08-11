@@ -129,6 +129,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     strategy:
       matrix:
+        compiler: [Clang-18, GCC-14]
         cxx_standard: [17]
         include:
           - compiler: Clang-18
