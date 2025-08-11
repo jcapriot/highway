@@ -179,31 +179,66 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        os: [macos-15, macos-13]  # macos-15 is arm, macos-13 is last x86_64 runner
-        compiler: [AppleLLVM, LLVM, GNU]
         cxx_standard: [17]
         include:
+
           - os: macos-15
+            compiler: AppleLLVM
+            c_compiler: clang
+            cxx_compiler: clang++
             cxx_flags: -DHWY_DISABLED_TARGETS=0x258c0000  # only target NEON
 
           - os: macos-13
-            cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # only target AVX2
-            extra_meson_flags: -Ddisable_futex=true
-
-          - compiler: AppleLLVM
+            compiler: AppleLLVM
             c_compiler: clang
             cxx_compiler: clang++
+            extra_meson_args: -Ddisable_futex=True
+            cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # only target AVX2
             
-          - compiler: LLVM
+          - os: macos-15
+            compiler: LLVM
             extra_deps: llvm@20 lld@20
             c_compiler: $(brew --prefix llvm@20)/bin/clang
             cxx_compiler: $(brew --prefix llvm@20)/bin/clang++
+            cxx_flags: -DHWY_DISABLED_TARGETS=0x258c0000  # only target NEON
+
+          - os: macos-13
+            compiler: LLVM
+            extra_deps: llvm@20 lld@20
+            c_compiler: $(brew --prefix llvm@20)/bin/clang
+            cxx_compiler: $(brew --prefix llvm@20)/bin/clang++
+            extra_meson_args: -Ddisable_futex=True
+            cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # only target AVX2
             
-          - compiler: GNU
+          - os: macos-15
+            compiler: GNU
             extra_deps: gcc@15
             c_compiler: gcc-15
             cxx_compiler: g++-15
-
+            cxx_flags: -DHWY_DISABLED_TARGETS=0x258c0000  # only target NEON
+            
+          - os: macos-13
+            compiler: GNU
+            extra_deps: gcc@15
+            c_compiler: gcc-15
+            cxx_compiler: g++-15
+            extra_meson_args: -Ddisable_futex=True
+            cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # only target AVX2
+            
+          - cos: macos-15
+            ompiler: GNU
+            extra_deps: gcc@15
+            c_compiler: gcc-15
+            cxx_compiler: g++-15
+            cxx_flags: -DHWY_DISABLED_TARGETS=0x258c0000  # only target NEON
+            
+          - os: macos-13
+            compiler: GNU
+            extra_deps: gcc@15
+            c_compiler: gcc-15
+            cxx_compiler: g++-15
+            extra_meson_args: -Ddisable_futex=True
+            cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # only target AVX2
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
@@ -220,8 +255,9 @@ jobs:
         run: |
             export CC=${{ matrix.c_compiler }}
             export CXX=${{ matrix.cxx_compiler }}
-            export CXXFLAGS=${{ matrix.cxx_flags }}
             meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
+        env:
+          CXXFLAGS: ${{ matrix.cxx_flags }}
       
       - name: Report Targets
         run: |
@@ -240,27 +276,28 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        os: [windows-2022, windows-11-arm]
-        compiler: [LLVM, MSVC]
         cxx_standard: [17]
         include:
           # these compilers currently default to what is installed on the runner images
-          - compiler: LLVM  # @ 20.1.8
+          - os: windows-2022
+            compiler: LLVM  # @ 20.1.8
             c_compiler: clang-cl
             cxx_compiler: clang-cl
             extra_meson_flags: -Dvsenv=true
+            cxx_flags: /DHWY_DISABLED_TARGETS=0x59d8
 
-          - compiler: MSVC  # @ 17.14.36015.10
+          - os: windows-2022
+            compiler: MSVC  # @ 17.14.36015.10
             c_compiler: cl
             cxx_compiler: cl
             extra_meson_flags: -Dvsenv-true -Dcontrib=disabled  # MSVC usually chokes on compiling vqsort on CI
-          
-          - os: windows-2022
             cxx_flags: /DHWY_DISABLED_TARGETS=0x59d8
-        exclude:
-            # Note: on windows-11-arm, only NEON_WITHOUT_AES is currently found as a target
+          
           - os: windows-11-arm
-          - compiler: MSVC
+            compiler: LLVM  # @ 20.1.8
+            c_compiler: clang-cl
+            cxx_compiler: clang-cl
+            extra_meson_flags: -Dvsenv=true
 
     steps:
       - name: Harden Runner

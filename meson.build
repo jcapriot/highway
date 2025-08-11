@@ -316,7 +316,6 @@ endif
 
 have_sys_auxv_h = cpp.has_header('sys/auxv.h')
 have_asm_hwcap_h = cpp.has_header('asm/hwcap.h')
-toolchain_args = []
 if not have_sys_auxv_h
     hwy_cpp_args += '-DTOOLCHAIN_MISS_SYS_AUXV_H'
 endif
@@ -347,7 +346,6 @@ hwy_lib = library(
     'hwy',
     hwy_sources,
     dependencies: atomic_dep,
-    cpp_args: toolchain_args,
     cpp_shared_args: hwy_shared_export_args,
     cpp_static_args: hwy_static_args,
     link_args: lib_link_args,
