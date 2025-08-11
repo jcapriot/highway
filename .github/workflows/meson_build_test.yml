@@ -86,7 +86,7 @@ jobs:
             - compiler: Clang-18
               extra_deps: clang-18
               c_compiler: clang-18
-              cxx_compiler: clang++18
+              cxx_compiler: clang++-18
               cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8
             
             - compiler: GCC-13
