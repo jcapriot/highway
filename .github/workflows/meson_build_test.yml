@@ -1,17 +1,3 @@
-# Copyright 2021 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 permissions: read-all
 name: Meson build / test
 on: [push, pull_request]
@@ -58,7 +44,7 @@ jobs:
         run: sudo apt-get install libgtest-dev ${{ matrix.extra_deps }}
 
       - name: Configure Build
-        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
+        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_setup_args }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
@@ -107,7 +93,7 @@ jobs:
         run: sudo apt-get install ninja-build meson libgtest-dev ${{ matrix.extra_deps }}
 
       - name: Configure Build
-        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
+        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_setup_args }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
@@ -156,7 +142,7 @@ jobs:
         run: sudo apt-get install ninja-build meson libgtest-dev ${{ matrix.extra_deps }}
 
       - name: Configure Build
-        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
+        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_setup_args }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
@@ -192,7 +178,6 @@ jobs:
             compiler: AppleLLVM
             c_compiler: clang
             cxx_compiler: clang++
-            extra_meson_args: -Ddisable_futex=True
             cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # only target AVX2
             cxx_standard: 17
 
@@ -209,7 +194,7 @@ jobs:
             extra_deps: llvm@20 lld@20
             c_compiler: $(brew --prefix llvm@20)/bin/clang
             cxx_compiler: $(brew --prefix llvm@20)/bin/clang++
-            extra_meson_args: -Ddisable_futex=True
+            extra_setup_args: -Ddisable_futex=True
             cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # only target AVX2
             cxx_standard: 17
             
@@ -226,7 +211,6 @@ jobs:
             extra_deps: gcc@15
             c_compiler: gcc-15
             cxx_compiler: g++-15
-            extra_meson_args: -Ddisable_futex=True
             cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # only target AVX2
             cxx_standard: 17
 
@@ -246,7 +230,7 @@ jobs:
         run: |
             export CC=${{ matrix.c_compiler }}
             export CXX=${{ matrix.cxx_compiler }}
-            meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
+            meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_setup_args }}
         env:
           CXXFLAGS: ${{ matrix.cxx_flags }}
       
@@ -273,7 +257,7 @@ jobs:
             compiler: LLVM  # @ 20.1.8
             c_compiler: clang-cl
             cxx_compiler: clang-cl
-            extra_meson_flags: -Dvsenv=true
+            extra_setup_args: -Dvsenv=true
             cxx_flags: /DHWY_DISABLED_TARGETS=0x59d8
             cxx_standard: 17
 
@@ -281,7 +265,7 @@ jobs:
             compiler: MSVC  # @ 17.14.36015.10
             c_compiler: cl
             cxx_compiler: cl
-            extra_meson_flags: -Dvsenv=true -Dcontrib=disabled  # MSVC usually chokes on compiling vqsort on CI
+            extra_setup_args: -Dvsenv=true -Dcontrib=disabled  # MSVC usually chokes on compiling vqsort on CI
             cxx_flags: /DHWY_DISABLED_TARGETS=0x59d8
             cxx_standard: 17
           
@@ -289,7 +273,7 @@ jobs:
             compiler: LLVM  # @ 20.1.8
             c_compiler: clang-cl
             cxx_compiler: clang-cl
-            extra_meson_flags: -Dvsenv=true
+            extra_setup_args: -Dvsenv=true
             cxx_standard: 17
 
     steps:
@@ -306,7 +290,7 @@ jobs:
             pipx install meson
 
       - name: Configure Build
-        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
+        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_setup_args }}
         env:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
