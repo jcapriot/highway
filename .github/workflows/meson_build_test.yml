@@ -195,7 +195,7 @@ jobs:
             extra_meson_args: -Ddisable_futex=True
             cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # only target AVX2
             cxx_standard: 17
-            
+
           - os: macos-15
             compiler: LLVM
             extra_deps: llvm@20 lld@20
