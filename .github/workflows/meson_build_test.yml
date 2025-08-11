@@ -136,12 +136,13 @@ jobs:
             extra_deps: clang-18
             c_compiler: clang-18
             cxx_compiler: clang++-18
+            cxx_flags: -DHWY_DISABLED_TARGETS=0x318c0000  # Only target HWY_NEON_BF16
 
           - compiler: GCC-14
             extra_deps: g++-14
             c_compiler: gcc-14
             cxx_compiler: g++-14
-            cxx_flags: -ftrapv
+            cxx_flags: -ftrapv -DHWY_DISABLED_TARGETS=0x318c0000  # Only target HWY_NEON_BF16
 
     steps:
       - name: Harden Runner
