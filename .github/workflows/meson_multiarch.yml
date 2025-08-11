@@ -49,49 +49,6 @@ jobs:
           meson compile -C out -j 2 -v
           meson test -C out -j 2 --print-errorlogs
 
-  aarch64_cmake:
-    name: Build and test ${{ matrix.name }} on AArch64
-    runs-on: ubuntu-24.04-arm
-    strategy:
-      matrix:
-        include:
-          - name: Clang-18
-            extra_deps: clang-18
-            c_compiler: clang-18
-            cxx_compiler: clang++-18
-            cxx_standard: 17
-
-          - name: GCC-14
-            extra_deps: g++-14
-            c_compiler: gcc-14
-            cxx_compiler: g++-14
-            cxx_flags: -ftrapv
-            cxx_standard: 17
-
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
-        with:
-          egress-policy: audit  # cannot be block - runner does git checkout
-
-      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.0.0
-
-      - name: Install deps
-        run: sudo apt-get install ninja-build meson libgtest-dev ${{ matrix.extra_deps }}
-
-      - name: Configure Build
-        run: meson setup out -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
-        env:
-          CXX: ${{matrix.cxx_compiler}}
-          CC: ${{matrix.c_compiler}}
-          CXXFLAGS: ${{ matrix.cxx_flags }}
-
-      - name: Build
-        run: meson compile -C out -j 2 -v
-
-      - name: Test
-        run: meson test -C out -j 2 --print-errorlogs
-
   loongarch64_cmake:
     name: Build and test ${{ matrix.name }} on LoongArch64
     runs-on: ubuntu-24.04
