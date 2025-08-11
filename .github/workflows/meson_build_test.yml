@@ -281,7 +281,7 @@ jobs:
             compiler: MSVC  # @ 17.14.36015.10
             c_compiler: cl
             cxx_compiler: cl
-            extra_meson_flags: -Dvsenv-true -Dcontrib=disabled  # MSVC usually chokes on compiling vqsort on CI
+            extra_meson_flags: -Dvsenv=true -Dcontrib=disabled  # MSVC usually chokes on compiling vqsort on CI
             cxx_flags: /DHWY_DISABLED_TARGETS=0x59d8
             cxx_standard: 17
           
