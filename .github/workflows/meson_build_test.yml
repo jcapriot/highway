@@ -5,7 +5,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 env:
-  meson_setup_args: -Dwarning_level=2 -Dbuildtype=debugoptimized
+  meson_setup_args: -Dwarning_level=2 -Dbuildtype=debugoptimized -Dgtest:cpp_eh=default
 
 jobs:
   meson_ubuntu_jammy_x86_64:
