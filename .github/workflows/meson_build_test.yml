@@ -98,10 +98,11 @@ jobs:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
           CXXFLAGS: ${{ matrix.cxx_flags }}
-
+      
+      # builds libhwy and compiles the target list executable
       - name: Report Targets
         run: |
-          meson compile -C out hwy_list_targets
+          meson compile -C out -v hwy_list_targets
           out/hwy_list_targets
 
       - name: Build
@@ -148,9 +149,10 @@ jobs:
           CC: ${{matrix.c_compiler}}
           CXXFLAGS: ${{ matrix.cxx_flags }}
       
+      # builds libhwy and compiles the target list executable
       - name: Report Targets
         run: |
-          meson compile -C out hwy_list_targets
+          meson compile -C out -v hwy_list_targets
           out/hwy_list_targets
 
       - name: Build
@@ -236,9 +238,10 @@ jobs:
         env:
           CXXFLAGS: ${{ matrix.cxx_flags }}
       
+      # builds libhwy and compiles the target list executable
       - name: Report Targets
         run: |
-          meson compile -C out hwy_list_targets
+          meson compile -C out -v hwy_list_targets
           out/hwy_list_targets
 
       - name: Build
@@ -298,7 +301,8 @@ jobs:
           CXX: ${{matrix.cxx_compiler}}
           CC: ${{matrix.c_compiler}}
           CXXFLAGS: ${{ matrix.cxx_flags }}
-          
+      
+      # builds libhwy and compiles the target list executable
       - name: Report Targets
         run: |
           meson compile -C out hwy_list_targets
@@ -343,6 +347,12 @@ jobs:
                 ;
         run: |
           CXXFLAGS=${{ matrix.cxx_flags }} meson setup out ${{env.meson_setup_args}} ${{ matrix.meson_flags }}
+          
+          # compile just the libhwy and list targets
+          meson compile -C out -v hwy_list_targets
+          out/hwy_list_targets
+
+          # dry run the rest of the compile commands
           meson compile -C out -j 2 -v --ninja-args=-n,-d,explain
           # meson test -C out -j 2 --print-errorlogs
 
@@ -399,7 +409,14 @@ jobs:
 
       - name: Configure Build
         run: meson setup out --cross-file la64_cross_file.txt -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_meson_flags }}
+      
+      # build libhwy and compile the target list executable
+      - name: Report Targets
+        run: | 
+          meson compile -C out -j 2 -v hwy_list_targets
+          meson devenv -C out hwy_list_targets
 
+      # dry run the rest of the compile commands
       - name: Build
         run: meson compile -C out -j 2 -v --ninja-args=-n,-d,explain
 
