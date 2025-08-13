@@ -414,7 +414,7 @@ jobs:
       - name: Report Targets
         run: | 
           meson compile -C out -j 2 -v hwy_list_targets
-          meson devenv -C out hwy_list_targets
+          qemu-loongarch64 -cpu max -L /opt/cross-tools/target out/hwy_list_targets
 
       # dry run the rest of the compile commands
       - name: Build
