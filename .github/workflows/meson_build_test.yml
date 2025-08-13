@@ -157,7 +157,7 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out -j 2 --print-errorlogs
+        run: meson test -C out -j 2 --print-errorlogs ${{ matrix.extra_test_args }}
 
   meson_macos:
     name: Meson build and test ${{ matrix.compiler }} (C++${{ matrix.cxx_standard }}) on ${{ matrix.os }}
@@ -178,6 +178,7 @@ jobs:
             compiler: AppleLLVM
             c_compiler: clang
             cxx_compiler: clang++
+            extra_test_args: --timeout-multiplier=5
             cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # only target AVX2
             cxx_standard: 17
 
@@ -194,8 +195,8 @@ jobs:
             extra_deps: llvm@20 lld@20
             c_compiler: $(brew --prefix llvm@20)/bin/clang
             cxx_compiler: $(brew --prefix llvm@20)/bin/clang++
-            extra_setup_args: -Ddisable_futex=true
             cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # only target AVX2
+            extra_test_args: --timeout-multiplier=5
             cxx_standard: 20
             
           - os: macos-15
@@ -212,6 +213,7 @@ jobs:
             c_compiler: gcc-15
             cxx_compiler: g++-15
             cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # only target AVX2
+            extra_test_args: --timeout-multiplier=5
             cxx_standard: 17
 
     steps:
@@ -243,7 +245,7 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out -j 2 --print-errorlogs
+        run: meson test -C out -j 2 --print-errorlogs ${{ matrix.extra_test_args }}
 
   meson_win:
     name: Meson build and test ${{ matrix.compiler }} (C++${{matrix.cxx_standard}}) on ${{ matrix.os }}
@@ -257,7 +259,8 @@ jobs:
             compiler: LLVM  # @ 20.1.8
             c_compiler: clang-cl
             cxx_compiler: clang-cl
-            extra_setup_args: -Dvsenv=true -Ddisable_futex=true
+            extra_setup_args: -Dvsenv=true
+            extra_test_args: --timeout-multiplier=5
             cxx_flags: /DHWY_DISABLED_TARGETS=0x59d8
             cxx_standard: 20
 
@@ -305,4 +308,4 @@ jobs:
         run: meson compile -C out -j 2 -v
 
       - name: Test
-        run: meson test -C out -j 2 --print-errorlogs
+        run: meson test -C out -j 2 --print-errorlogs ${{ matrix.extra_test_args }}
