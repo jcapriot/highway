@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        compiler: [Clang-18, GCC-15]
+        compiler: [Clang-18, GCC-14]
         cxx_standard: [17]
         include:
             - compiler: Clang-18
@@ -75,10 +75,9 @@ jobs:
               cxx_compiler: clang++-18
               cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8
             
-            - compiler: GCC-15
-              extra_deps: g++-15
-              c_compiler: gcc-15
-              cxx_compiler: g++-15
+            - compiler: GCC-14
+              c_compiler: gcc-14
+              cxx_compiler: g++-14
               cxx_flags: -ftrapv -DHWY_DISABLED_TARGETS=0x59d8
 
     steps:
