@@ -8,58 +8,58 @@ env:
   meson_setup_args: -Dwarning_level=2 -Dbuildtype=debugoptimized -Dgtest:cpp_eh=default
 
 jobs:
-  # ubuntu_jammy_x86_64:
-  #   name: Meson build and test ${{ matrix.compiler }} (C++${{ matrix.cxx_standard }}) on Jammy x86_64
-  #   runs-on: ubuntu-22.04
-  #   strategy:
-  #     matrix:
-  #       compiler: [Clang-15, GCC-12]
-  #       cxx_standard: [11, 20]
-  #       include:
-  #         - compiler: Clang-15
-  #           extra_deps: clang-15
-  #           c_compiler: clang-15
-  #           cxx_compiler: clang++-15
-  #           cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # disable every x86 target except AVX2
+  ubuntu_jammy_x86_64:
+    name: Meson build and test ${{ matrix.compiler }} (C++${{ matrix.cxx_standard }}) on Jammy x86_64
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        compiler: [Clang-15, GCC-12]
+        cxx_standard: [11]
+        include:
+          - compiler: Clang-15
+            extra_deps: clang-15
+            c_compiler: clang-15
+            cxx_compiler: clang++-15
+            cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8  # disable every x86 target except AVX2
 
-  #         - compiler: GCC-12
-  #           extra_deps: g++-12
-  #           c_compiler: gcc-12
-  #           cxx_compiler: g++-12
-  #           cxx_flags: -ftrapv -DHWY_DISABLED_TARGETS=0x59d8 
+          - compiler: GCC-12
+            extra_deps: g++-12
+            c_compiler: gcc-12
+            cxx_compiler: g++-12
+            cxx_flags: -ftrapv -DHWY_DISABLED_TARGETS=0x59d8 
 
-  #   steps:
-  #     - name: Harden Runner
-  #       uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
-  #       with:
-  #         egress-policy: audit  # cannot be block - runner does git checkout
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        with:
+          egress-policy: audit  # cannot be block - runner does git checkout
 
-  #     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4.0.0
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4.0.0
 
-  #       # meson on jammy is at version 0.61.2, so install through pipx
-  #     - name: Install build requirements
-  #       run: pipx install meson
+        # meson on jammy is at version 0.61.2, so install through pipx
+      - name: Install build requirements
+        run: pipx install meson
 
-  #     - name: Install deps
-  #       run: sudo apt-get install libgtest-dev ${{ matrix.extra_deps }}
+      - name: Install deps
+        run: sudo apt-get install libgtest-dev ${{ matrix.extra_deps }}
 
-  #     - name: Configure Build
-  #       run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_setup_args }}
-  #       env:
-  #         CXX: ${{matrix.cxx_compiler}}
-  #         CC: ${{matrix.c_compiler}}
-  #         CXXFLAGS: ${{ matrix.cxx_flags }}
+      - name: Configure Build
+        run: meson setup out -Dwerror=true -Dcpp_std=c++${{ matrix.cxx_standard }} ${{env.meson_setup_args}} ${{ matrix.extra_setup_args }}
+        env:
+          CXX: ${{matrix.cxx_compiler}}
+          CC: ${{matrix.c_compiler}}
+          CXXFLAGS: ${{ matrix.cxx_flags }}
 
-  #     - name: Report Targets
-  #       run: |
-  #         meson compile -C out hwy_list_targets
-  #         out/hwy_list_targets
+      - name: Report Targets
+        run: |
+          meson compile -C out hwy_list_targets
+          out/hwy_list_targets
 
-  #     - name: Build
-  #       run: meson compile -C out -j 2 -v
+      - name: Build
+        run: meson compile -C out -j 2 -v
 
-  #     - name: Test
-  #       run: meson test -C out -j 2 --print-errorlogs
+      - name: Test
+        run: meson test -C out -j 2 --print-errorlogs
 
   ubuntu_noble_x86_64:
     name: Meson build and test ${{ matrix.compiler }} (C++${{ matrix.cxx_standard }}) on Noble x86_64
@@ -67,7 +67,7 @@ jobs:
     strategy:
       matrix:
         compiler: [Clang-18, GCC-15]
-        cxx_standard: [11, 17]
+        cxx_standard: [17]
         include:
             - compiler: Clang-18
               extra_deps: clang-18
