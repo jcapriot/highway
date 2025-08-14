@@ -76,6 +76,7 @@ jobs:
               cxx_flags: -DHWY_DISABLED_TARGETS=0x59d8
             
             - compiler: GCC-15
+              extra_deps: g++-15
               c_compiler: gcc-15
               cxx_compiler: g++-15
               cxx_flags: -ftrapv -DHWY_DISABLED_TARGETS=0x59d8
