@@ -692,3 +692,5 @@ if tests_enabled
         endforeach
     endif
 endif
+
+subdir('my_tests')
